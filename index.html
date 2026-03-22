@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MINEWORKS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#12100e;--panel:#1a1510;--panel2:#221c14;--border:#3a2e1e;--border2:#4a3c28;--gold:#d4a843;--gold2:#f0c060;--text:#e8d8b8;--dim:#6a5a40;--red:#c04030;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+header{background:linear-gradient(180deg,#1e1812,#160f08);border-bottom:2px solid var(--border2);padding:4px 8px;display:flex;flex-wrap:wrap;align-items:center;gap:5px;flex-shrink:0;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+header::after{content:'';position:absolute;bottom:-3px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.35;}
+.hrow1{display:flex;align-items:center;gap:6px;width:100%;}
+.hrow1 h1{font-family:'Cinzel',serif;font-size:.95rem;font-weight:900;color:var(--gold2);letter-spacing:3px;text-shadow:0 0 18px rgba(212,168,67,.4);}
+.hrow2{display:flex;align-items:center;gap:5px;width:100%;flex-wrap:nowrap;overflow:hidden;}
+.hsep{width:1px;height:20px;background:var(--border2);flex-shrink:0;}
+.hbtn{font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:1.5px;padding:4px 8px;border-radius:2px;border:1px solid var(--border2);background:var(--panel2);color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.hbtn:hover{border-color:var(--gold);color:var(--gold2);}
+.coin-disp{display:flex;align-items:center;gap:4px;background:var(--panel2);border:1px solid var(--gold);border-radius:3px;padding:3px 8px;font-family:'Cinzel',serif;flex-shrink:0;margin-left:auto;}
+.coin-amt{font-size:.9rem;color:var(--gold2);min-width:40px;text-align:right;}
+.depth-inf{font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:1.5px;color:var(--dim);white-space:nowrap;margin-left:auto;}
+.depth-inf span{color:var(--gold);}
+/* === MAIN AREA: just the canvas === */
+.gwrap{flex:1;position:relative;overflow:hidden;background:#080602;min-width:0;}
+.gwrap::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#1e1810 1px,transparent 1px);background-size:48px 48px;pointer-events:none;opacity:.3;}
+#gc{position:absolute;top:0;left:0;display:block;touch-action:none;}
+/* === BOTTOM PANEL === */
+.botbar{background:var(--panel);border-top:2px solid var(--border2);flex-shrink:0;display:flex;flex-direction:column;}
+/* Tab strip */
+.bot-tabstrip{display:flex;align-items:stretch;border-bottom:1px solid var(--border);height:28px;flex-shrink:0;}
+.bot-tab{font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:1.5px;padding:0 10px;cursor:pointer;color:var(--dim);border:none;background:transparent;border-bottom:2px solid transparent;transition:all .13s;display:flex;align-items:center;gap:4px;margin-bottom:-1px;}
+.bot-tab:hover{color:var(--text);}
+.bot-tab.active{color:var(--gold2);border-bottom-color:var(--gold2);}
+.bot-key{display:inline-block;font-size:.44rem;background:var(--panel2);border:1px solid var(--border2);border-radius:2px;padding:0 3px;color:var(--dim);font-family:'Cinzel',serif;}
+.bot-tab.active .bot-key{color:var(--gold);border-color:var(--gold);}
+.bot-sep{width:1px;background:var(--border);margin:4px 2px;flex-shrink:0;}
+/* Panel sections */
+.bot-section{display:none;flex:1;overflow:hidden;padding:4px 8px;align-items:center;gap:6px;}
+.bot-section.active{display:flex;}
+/* Section 1: machines */
+.mach-row{display:flex;gap:3px;align-items:center;overflow-x:auto;flex:1;padding:2px 0;}
+.mach-row::-webkit-scrollbar{height:3px;}
+.mach-row::-webkit-scrollbar-thumb{background:var(--border2);}
+.mslot{display:flex;flex-direction:column;align-items:center;gap:1px;flex-shrink:0;cursor:pointer;padding:3px 4px;border-radius:3px;border:1px solid transparent;transition:all .12s;position:relative;}
+.mslot:hover{background:rgba(255,255,255,.04);border-color:var(--border2);}
+.mslot.sel{background:rgba(212,168,67,.1);border-color:var(--gold);}
+.mslot:disabled,.mslot.disabled{opacity:.3;cursor:not-allowed;}
+.mtic{width:34px;height:34px;border-radius:3px;overflow:hidden;flex-shrink:0;}
+.mtic canvas{width:100%;height:100%;image-rendering:pixelated;display:block;}
+.mname{font-family:'Cinzel',serif;font-size:.4rem;color:var(--dim);white-space:nowrap;}
+.mslot.sel .mname{color:var(--gold2);}
+.mcost{font-family:'Cinzel',serif;font-size:.38rem;color:var(--gold);}
+.mq{position:absolute;top:1px;right:1px;width:13px;height:13px;border-radius:50%;border:1px solid var(--border2);background:var(--panel);color:var(--dim);font-size:.48rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;line-height:1;z-index:2;}
+.mq:hover{border-color:var(--gold);color:var(--gold2);}
+.msec-lbl{font-family:'Cinzel',serif;font-size:.42rem;letter-spacing:2px;color:var(--dim);text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);flex-shrink:0;padding:0 2px;}
+.msec-div{width:1px;background:var(--border);flex-shrink:0;align-self:stretch;margin:4px 2px;}
+/* Direction picker in section 1 */
+.dpad{display:grid;grid-template-columns:repeat(3,22px);grid-template-rows:repeat(3,22px);gap:1px;flex-shrink:0;}
+.dpb{background:var(--panel2);border:1px solid var(--border2);color:var(--dim);font-size:.65rem;border-radius:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.dpb:hover{border-color:var(--gold);color:var(--gold2);}
+.dpb.act{background:rgba(212,168,67,.15);border-color:var(--gold2);color:var(--gold2);}
+.dpb.blank{visibility:hidden;}
+/* Section 2: tools (pointer/erase) */
+.tools-row{display:flex;gap:6px;align-items:center;flex:1;}
+.tslot{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 8px;border-radius:3px;border:1px solid transparent;transition:all .12s;}
+.tslot:hover{background:rgba(255,255,255,.04);border-color:var(--border2);}
+.tslot.sel{background:rgba(212,168,67,.1);border-color:var(--gold);}
+.tslot-ico{font-size:1.3rem;line-height:1;}
+.tslot-name{font-family:'Cinzel',serif;font-size:.48rem;color:var(--dim);}
+.tslot.sel .tslot-name{color:var(--gold2);}
+.tslot-sub{font-family:'Cinzel',serif;font-size:.4rem;color:var(--border2);}
+.tools-hint{flex:1;font-size:.66rem;color:var(--dim);padding:0 10px;line-height:1.55;}
+/* Section 4: info panel (inventory, codex, stats, log) — slides up */
+.info-panel{position:fixed;bottom:0;left:0;right:0;height:200px;background:var(--panel);border-top:2px solid var(--border2);z-index:200;transform:translateY(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+.info-panel.open{transform:translateY(0);}
+.info-inner-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 8px;}
+.info-tab{font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:2px;padding:5px 10px;cursor:pointer;color:var(--dim);border:none;background:transparent;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;}
+.info-tab:hover{color:var(--text);}.info-tab.active{color:var(--gold2);border-bottom-color:var(--gold2);}
+.info-content{flex:1;overflow:hidden;display:flex;align-items:center;padding:5px 10px;gap:5px;min-height:0;}
+/* Inventory */
+.inv-strip{display:flex;gap:4px;align-items:center;overflow-x:auto;flex:1;padding:2px 0;}
+.inv-strip::-webkit-scrollbar{height:3px;}
+.inv-strip::-webkit-scrollbar-thumb{background:var(--border2);}
+.islot{width:54px;height:54px;flex-shrink:0;background:var(--panel2);border:1px solid var(--border);border-radius:3px;position:relative;overflow:hidden;padding:2px;}
+.islot canvas{width:100%!important;height:auto!important;image-rendering:pixelated;display:block;}
+.icnt{position:absolute;bottom:1px;right:2px;font-family:'Cinzel',serif;font-size:.5rem;color:#fff;text-shadow:0 1px 2px #000,-1px 0 #000;font-weight:700;}
+.iname{position:absolute;top:1px;left:2px;font-family:'Cinzel',serif;font-size:.42rem;color:rgba(255,255,255,.7);text-shadow:0 1px 2px #000;}
+/* Codex */
+.codex-strip{display:flex;gap:3px;flex:1;overflow-x:auto;align-items:center;padding:2px 0;}
+.codex-strip::-webkit-scrollbar{height:3px;}
+.codex-strip::-webkit-scrollbar-thumb{background:var(--border2);}
+.cx-slot{width:44px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:2px;border-radius:3px;border:1px solid transparent;opacity:.26;}
+.cx-slot.found{opacity:1;border-color:var(--border);}
+.cx-slot canvas{width:30px!important;height:30px!important;image-rendering:pixelated;display:block;}
+.cx-name{font-family:'Cinzel',serif;font-size:.4rem;text-align:center;color:var(--dim);}
+.cx-slot.found .cx-name{color:var(--text);}
+.cx-rar{font-family:'Cinzel',serif;font-size:.36rem;text-align:center;}
+/* Stats */
+.stats-strip{display:flex;gap:14px;flex:1;align-items:center;padding:0 4px;flex-wrap:wrap;}
+.st-item{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.st-k{font-family:'Cinzel',serif;font-size:.44rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
+.st-v{font-family:'Cinzel',serif;font-size:.84rem;color:var(--gold2);}
+/* Log */
+.log-strip{flex:1;display:flex;flex-direction:column;gap:1px;overflow-y:auto;font-family:monospace;font-size:.6rem;}
+.log-strip::-webkit-scrollbar{width:2px;}
+.log-strip::-webkit-scrollbar-thumb{background:var(--border2);}
+.ll{color:var(--dim);}.ll.good{color:#7acc50;}.ll.rare{color:var(--gold2);}.ll.epic{color:#cc80ff;}
+#tip{position:fixed;background:var(--panel);border:1px solid var(--border2);padding:6px 11px;border-radius:3px;font-size:.72rem;pointer-events:none;display:none;z-index:999;box-shadow:4px 4px 20px rgba(0,0,0,.7);max-width:200px;}
+#tip .tn{font-family:'Cinzel',serif;font-size:.8rem;margin-bottom:2px;}
+#tip .tr{font-size:.58rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;}
+#tip .td{font-size:.66rem;color:var(--dim);}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.mo.open{display:flex;}
+.mb{background:linear-gradient(160deg,#1e1a12,#141008);border:1px solid var(--border2);border-radius:6px;box-shadow:0 0 60px rgba(0,0,0,.8);max-height:88vh;overflow-y:auto;animation:mIn .18s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.mhdr{padding:12px 17px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.mtit{font-family:'Cinzel',serif;font-size:.95rem;color:var(--gold2);letter-spacing:3px;}
+.mclose{background:transparent;border:1px solid var(--border2);color:var(--dim);font-size:.9rem;width:24px;height:24px;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.mclose:hover{border-color:var(--red);color:var(--red);}
+#uMod .mb{width:330px;}
+.uprev{display:flex;align-items:center;gap:11px;padding:11px 17px;border-bottom:1px solid var(--border);}
+.utex{width:48px;height:48px;border-radius:4px;overflow:hidden;border:1px solid var(--border2);flex-shrink:0;}
+.utex canvas{width:100%;height:100%;image-rendering:pixelated;display:block;}
+.uinf .un{font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold2);margin-bottom:3px;}
+.uinf .ul{font-size:.68rem;color:var(--dim);}
+.uinf .ul span{color:var(--gold);font-family:'Cinzel',serif;}
+.upglist{padding:10px 16px;display:flex;flex-direction:column;gap:6px;}
+.upgrow{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:8px 10px;display:flex;align-items:center;gap:9px;}
+.upgrow:hover{border-color:var(--border2);}
+.uico{font-size:1.05rem;width:22px;text-align:center;flex-shrink:0;}
+.uinfo{flex:1;}.unm{font-family:'Cinzel',serif;font-size:.7rem;color:var(--text);margin-bottom:1px;}
+.udsc{font-size:.62rem;color:var(--dim);margin-bottom:2px;}
+.ulv{font-size:.58rem;color:var(--gold);font-family:'Cinzel',serif;}
+.ucst{font-size:.57rem;margin-top:2px;}.ucst.can{color:#7acc50;}.ucst.cant{color:#c06050;}
+.ubtn{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:1px;padding:4px 8px;border-radius:2px;cursor:pointer;border:1px solid var(--gold);color:var(--gold);background:transparent;transition:all .12s;white-space:nowrap;flex-shrink:0;}
+.ubtn:hover:not(:disabled){background:rgba(212,168,67,.15);}
+.ubtn:disabled{border-color:var(--border);color:var(--dim);cursor:not-allowed;}
+#almMod .mb{width:480px;}
+.atabs{display:flex;border-bottom:1px solid var(--border);padding:0 16px;gap:3px;}
+.atab{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:2px;padding:6px 11px;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;transition:all .15s;background:transparent;border-top:none;border-left:none;border-right:none;margin-bottom:-1px;}
+.atab:hover{color:var(--text);}.atab.active{color:var(--gold2);border-bottom-color:var(--gold2);}
+.abody{padding:10px 16px;max-height:55vh;overflow-y:auto;}
+.acard{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:3px;border:1px solid var(--border);margin-bottom:4px;}
+.acard.locked{opacity:.25;}
+.atex{width:28px;height:28px;flex-shrink:0;border-radius:2px;overflow:hidden;border:1px solid var(--border2);}
+.atex canvas{width:100%;height:100%;image-rendering:pixelated;display:block;}
+.amain{flex:1;min-width:0;}
+.anm{font-family:'Cinzel',serif;font-size:.72rem;}
+.asub{font-size:.6rem;color:var(--dim);margin-top:1px;}
+.abar{width:60px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:3px;}
+.afill{height:100%;border-radius:2px;}
+.aright{text-align:right;flex-shrink:0;}
+.apct{font-family:'Cinzel',serif;font-size:.7rem;}
+.aval{font-size:.6rem;color:var(--dim);margin-top:1px;}
+.agrptit{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:3px;color:var(--dim);padding-bottom:3px;border-bottom:1px solid var(--border);margin-bottom:7px;margin-top:10px;}
+#guideMod .mb{width:410px;}
+.guide-hero{display:flex;align-items:center;gap:13px;padding:12px 17px;border-bottom:1px solid var(--border);}
+.guide-tex{width:58px;height:58px;border-radius:5px;overflow:hidden;border:1px solid var(--border2);flex-shrink:0;}
+.guide-tex canvas{width:100%;height:100%;image-rendering:pixelated;display:block;}
+.guide-mname{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold2);letter-spacing:2px;margin-bottom:4px;}
+.guide-badge{display:inline-block;font-family:'Cinzel',serif;font-size:.58rem;padding:2px 8px;border-radius:12px;border:1px solid var(--border2);color:var(--gold);background:var(--panel2);}
+.guide-body{padding:13px 17px;display:flex;flex-direction:column;gap:10px;}
+.guide-sec-title{font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid var(--border);}
+.guide-desc{font-size:.8rem;color:var(--text);line-height:1.65;}
+.guide-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+.guide-tag{font-size:.6rem;padding:2px 7px;border-radius:10px;border:1px solid var(--border2);color:var(--dim);background:var(--panel2);}
+.guide-tag.in{border-color:#304080;color:#6090d0;}.guide-tag.out{border-color:#305030;color:#50a050;}.guide-tag.fx{border-color:#503020;color:#b07840;}
+.guide-pipeline{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:8px 10px;font-size:.7rem;color:var(--dim);line-height:1.9;font-family:'Cinzel',serif;}
+.guide-pipeline b{color:var(--gold2);}
+.guide-tip{background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.18);border-radius:4px;padding:7px 10px;font-size:.72rem;color:#c8b880;line-height:1.55;}
+#orePicker .mb{width:390px;}
+.opk-grid{padding:10px 14px;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;max-height:52vh;overflow-y:auto;}
+.opk-slot{border-radius:4px;border:1px solid var(--border2);background:var(--panel2);padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .12s;}
+.opk-slot.found{cursor:pointer;}.opk-slot.found:hover{transform:scale(1.05);}
+.opk-slot.locked{opacity:.25;cursor:not-allowed;}
+.opk-slot canvas{width:34px!important;height:34px!important;image-rendering:pixelated;display:block;}
+.opk-name{font-family:'Cinzel',serif;font-size:.44rem;text-align:center;line-height:1.2;}
+.opk-slot.selected{outline:2px solid var(--gold2);}
+#storageMod .mb{width:350px;}
+.sg-grid{padding:10px 14px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;max-height:50vh;overflow-y:auto;}
+.sg-slot{aspect-ratio:1;background:var(--panel2);border:1px solid var(--border);border-radius:3px;position:relative;overflow:hidden;padding:2px;}
+.sg-slot canvas{width:100%!important;height:auto!important;image-rendering:pixelated;display:block;}
+.sg-cnt{position:absolute;bottom:1px;right:2px;font-family:'Cinzel',serif;font-size:.5rem;color:#fff;text-shadow:0 1px 2px #000;font-weight:700;}
+.notif{position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(50px);background:var(--panel);border:1px solid var(--border2);padding:8px 18px;border-radius:3px;font-family:'Cinzel',serif;font-size:.74rem;color:var(--gold2);pointer-events:none;z-index:600;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;}
+.notif.show{transform:translateX(-50%) translateY(0);opacity:1;}
+@keyframes slideIn{from{transform:translateX(-100%)}to{transform:none}}
+.home-btn{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:3px;padding:11px 20px;border-radius:3px;border:1px solid var(--border2);background:var(--panel2);color:var(--text);cursor:pointer;transition:all .15s;width:100%;}
+.home-btn:hover{border-color:var(--gold);color:var(--gold2);}
+.home-btn.gold{border-color:var(--gold);color:var(--gold2);background:rgba(212,168,67,.08);}
+.home-btn.gold:hover{background:rgba(212,168,67,.18);}
+.home-btn.dim{color:var(--dim);}
+.cl-entry{border-left:2px solid var(--border2);padding-left:12px;}
+.cl-ver{font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold2);margin-bottom:5px;}
+.cl-notes{font-size:.7rem;color:var(--dim);line-height:1.8;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--panel);}::-webkit-scrollbar-thumb{background:var(--border2);}
+#ghostBtns{position:absolute;display:none;pointer-events:none;z-index:50;}
+#ghostBtns.vis{display:block;}
+.gbtn{position:absolute;pointer-events:all;cursor:pointer;border-radius:50%;border:2px solid;font-size:15px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:bold;transition:transform .1s;box-shadow:0 2px 10px rgba(0,0,0,.8);user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent;}
+.gbtn:active{transform:scale(1.15);}
+.gbtn.ok{background:#1a3a10;border-color:#50e030;color:#80ff50;}
+.gbtn.ok.disabled{background:#1a1a1a;border-color:#404040;color:#505050;cursor:not-allowed;}
+.gbtn.ok.disabled:hover{transform:none;}
+.gbtn.cancel{background:#3a1008;border-color:#e03020;color:#ff6050;}
+.gbtn.rot{background:#1a1408;border-color:#d4a843;color:#f0c060;font-size:16px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow1">
+    <button class="hbtn" id="btnHamburger" onclick="openHamburger()" style="font-size:.9rem;padding:3px 7px;letter-spacing:0">☰</button>
+    <h1>⛏ MINEWORKS</h1>
+    <div class="coin-disp"><span>🪙</span><span class="coin-amt" id="coinAmt">50</span></div>
+  </div>
+  <div class="hrow2">
+    <button class="hbtn" onclick="openAlmanac()" style="border-color:#7050a0;color:#b080d8">ALMANAC</button>
+    <button class="hbtn" onclick="saveGame()" style="border-color:#3a6a3a;color:#70c070" id="btnSave">SAVE</button>
+    <div class="depth-inf">T:<span id="tickLbl">0</span> D:<span id="depthLbl">0</span>m</div>
+  </div>
+</header>
+
+<!-- HOME SCREEN -->
+<div class="mo" id="homeMod" style="z-index:700;background:rgba(0,0,0,.92)">
+  <div class="mb" style="width:420px;text-align:center;">
+    <div style="padding:32px 28px 8px;">
+      <div style="font-family:'Cinzel',serif;font-size:2rem;font-weight:900;color:var(--gold2);letter-spacing:6px;text-shadow:0 0 30px rgba(212,168,67,.5)">⛏ MINEWORKS</div>
+      <div style="font-family:'Crimson Pro',serif;font-size:.8rem;color:var(--dim);letter-spacing:3px;margin-top:4px">UNDERGROUND AUTOMATION</div>
+      <div style="height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:18px 0;opacity:.3"></div>
+    </div>
+    <div style="padding:0 28px 12px;display:flex;flex-direction:column;gap:10px;">
+      <button class="home-btn gold" id="homeContinueBtn" onclick="homeContinue()" style="display:none">▶ CONTINUE</button>
+      <button class="home-btn" onclick="homeNewGame()">⛏ NEW GAME</button>
+      <button class="home-btn dim" onclick="openChangelog()">📜 CHANGELOG</button>
+    </div>
+    <div style="padding:8px 28px 24px;font-family:'Crimson Pro',serif;font-size:.62rem;color:var(--dim)">v1.0 · Built with ❤ in MINEWORKS</div>
+  </div>
+</div>
+<!-- HAMBURGER MENU -->
+<div class="mo" id="hamburgerMod" style="align-items:flex-start;justify-content:flex-start;background:rgba(0,0,0,.6)">
+  <div style="background:var(--panel);border-right:1px solid var(--border2);height:100%;width:220px;display:flex;flex-direction:column;padding:0;animation:slideIn .18s ease;">
+    <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Cinzel',serif;font-size:.78rem;color:var(--gold2);letter-spacing:3px">MENU</div>
+      <button class="mclose" onclick="closeHamburger()">✕</button>
+    </div>
+    <div style="padding:12px 10px;display:flex;flex-direction:column;gap:6px;flex:1;">
+      <button class="hbtn" onclick="hambContinue()" style="text-align:left;padding:8px 12px;font-size:.62rem;letter-spacing:2px">▶ CONTINUE</button>
+      <button class="hbtn" onclick="hambHome()" style="text-align:left;padding:8px 12px;font-size:.62rem;letter-spacing:2px">🏠 HOME</button>
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <button class="hbtn" onclick="saveGame();closeHamburger()" style="text-align:left;padding:8px 12px;font-size:.62rem;letter-spacing:2px;border-color:#3a6a3a;color:#70c070">💾 SAVE</button>
+      <button class="hbtn" onclick="confirmDo('Clear the grid?',()=>{clearAll();closeHamburger();})" style="text-align:left;padding:8px 12px;font-size:.62rem;letter-spacing:2px;border-color:#703020;color:#c06050">✕ CLEAR GRID</button>
+    </div>
+    <div style="padding:10px 14px;font-family:'Crimson Pro',serif;font-size:.58rem;color:var(--dim);border-top:1px solid var(--border)" id="hambSaveInfo">No save</div>
+  </div>
+</div>
+<!-- CHANGELOG -->
+<div class="mo" id="changelogMod">
+  <div class="mb" style="width:420px">
+    <div class="mhdr"><div class="mtit">📜 CHANGELOG</div><button class="mclose" onclick="closeChangelog()">✕</button></div>
+    <div style="padding:14px 18px;max-height:60vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+      <div class="cl-entry"><div class="cl-ver">v1.0 — Launch</div><div class="cl-notes">• 20 ores across 6 rarity tiers (Common → Mythic)<br>• 13 machines: Miner, Conveyor, Vault, Chest, Furnace, Sorter, Crusher, Refinery, Forge, Target Miner, Storage, Extractor, Merger<br>• Size system: Tiny · Small · Normal · Big · Huge · Titanic<br>• Miner upgrades: Speed, Luck, Yield<br>• Smooth animations: belt scroll, forge sparks, furnace fire, miner shake<br>• Ore Almanac, Machine Guides, Info panel<br>• Local save / load</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- GRID CANVAS fills all remaining vertical space -->
+<div class="gwrap" id="gWrap"><canvas id="gc"></canvas><div id="ghostBtns"><div class="gbtn ok" id="gbOk">✓</div><div class="gbtn cancel" id="gbCancel">✕</div><div class="gbtn rot" id="gbRot">↻</div></div></div>
+<div class="botbar">
+  <div class="bot-tabstrip">
+    <button class="bot-tab active" id="bt0" onclick="switchBot(0)">&#9874; Machines <span class="bot-key">1</span></button>
+    <button class="bot-tab" id="bt1" onclick="switchBot(1)">&#128433; Tools <span class="bot-key">2</span></button>
+    <div class="bot-sep"></div>
+    <button class="bot-tab" id="bt3" onclick="toggleInfo()">&#128202; Info <span class="bot-key">4</span></button>
+  </div>
+  <!-- Section 1: Machines -->
+  <div class="bot-section active" id="bs0">
+    <div class="mach-row" id="machRow"></div>
+  </div>
+  <!-- Section 2: Tools -->
+  <div class="bot-section" id="bs1">
+    <div class="tools-row">
+      <div class="tslot sel" data-tool="pointer" onclick="selTool('pointer')" id="tslotPointer">
+        <div class="tslot-ico">&#128433;</div>
+        <div class="tslot-name">Pointer</div>
+        <div class="tslot-sub">Click machines</div>
+      </div>
+      <div class="tslot" data-tool="erase" onclick="selTool('erase')" id="tslotErase">
+        <div class="tslot-ico" style="color:#c06050">&#x2715;</div>
+        <div class="tslot-name" style="color:#c06050">Erase</div>
+        <div class="tslot-sub">[Del] key</div>
+      </div>
+      <div class="tools-hint">
+        <b style="color:var(--gold2);font-family:'Cinzel',serif">Pointer</b> — click a Miner to upgrade · click Target Miner or Extractor to set ore · click Storage to inspect<br>
+        <b style="color:#c06050;font-family:'Cinzel',serif">Erase</b> — click any machine to remove it &nbsp;|&nbsp; Right-click placed tile to rotate &nbsp;|&nbsp; <b style="color:var(--gold);font-family:'Cinzel',serif">Placing</b> — use ‹ › on ghost to rotate
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Info overlay panel (tab 4 toggle) -->
+<div class="info-panel" id="infoPanel">
+  <div class="info-inner-tabs">
+    <button class="info-tab active" id="it0" onclick="switchInfo(0)">Inventory</button>
+    <button class="info-tab" id="it1" onclick="switchInfo(1)">Ore Codex</button>
+    <button class="info-tab" id="it2" onclick="switchInfo(2)">Stats</button>
+    <button class="info-tab" id="it3" onclick="switchInfo(3)">Log</button>
+    <button class="mclose" onclick="toggleInfo()" style="margin-left:auto;align-self:center">&#x2715;</button>
+  </div>
+  <div class="info-content" id="infoContent"></div>
+</div>
+<div class="mo" id="uMod">
+  <div class="mb">
+    <div class="mhdr"><div class="mtit">&#9935; MINER UPGRADES</div><button class="mclose" onclick="closeUpgModal()">&#x2715;</button></div>
+    <div class="uprev"><div class="utex" id="uModTex"></div><div class="uinf"><div class="un" id="uModName">Miner</div><div class="ul">Speed <span id="uLvSpd">0</span> &middot; Luck <span id="uLvLck">0</span> &middot; Yield <span id="uLvYld">0</span></div><div class="ul" style="margin-top:2px">Balance: <span id="uModBal" style="color:var(--gold2)">0</span></div></div></div>
+    <div class="upglist" id="upgList"></div>
+  </div>
+</div>
+<div class="mo" id="almMod">
+  <div class="mb">
+    <div class="mhdr"><div class="mtit">&#128218; ORE ALMANAC</div><button class="mclose" onclick="closeAlmanac()">&#x2715;</button></div>
+    <div class="atabs"><button class="atab active" id="at0" onclick="almSwitch(0)">ALL</button><button class="atab" id="at1" onclick="almSwitch(1)">FOUND</button><button class="atab" id="at2" onclick="almSwitch(2)">BY RARITY</button></div>
+    <div class="abody" id="almBody"></div>
+  </div>
+</div>
+<div class="mo" id="guideMod">
+  <div class="mb">
+    <div class="mhdr"><div class="mtit" id="guideMTitle">MACHINE GUIDE</div><button class="mclose" onclick="closeGuide()">&#x2715;</button></div>
+    <div class="guide-hero"><div class="guide-tex" id="guideTexWrap"></div><div><div class="guide-mname" id="guideName"></div><div class="guide-badge" id="guideBadge"></div></div></div>
+    <div class="guide-body" id="guideBody"></div>
+  </div>
+</div>
+<div class="mo" id="orePicker">
+  <div class="mb">
+    <div class="mhdr"><div class="mtit" id="orePickerTitle">SET TARGET ORE</div><button class="mclose" onclick="closeOrePicker()">&#x2715;</button></div>
+    <div style="padding:6px 14px 0;font-size:.72rem;color:var(--dim)">Only discovered ores can be selected.</div>
+    <div class="opk-grid" id="opkGrid"></div>
+  </div>
+</div>
+<div class="mo" id="storageMod">
+  <div class="mb">
+    <div class="mhdr"><div class="mtit">&#128230; STORAGE</div><button class="mclose" onclick="closeStorageMod()">&#x2715;</button></div>
+    <div style="padding:6px 14px;font-size:.72rem;color:var(--dim);border-bottom:1px solid var(--border)" id="storageInfo">0 / 30</div>
+    <div class="sg-grid" id="sgGrid"></div>
+    <div style="padding:8px 14px;border-top:1px solid var(--border);display:flex;gap:6px">
+      <button class="hbtn danger" onclick="emptyStorage()" style="flex:1;font-size:.54rem">Empty All</button>
+      <button class="hbtn" onclick="closeStorageMod()" style="flex:1;font-size:.54rem">Close</button>
+    </div>
+  </div>
+</div>
+<div class="mo" id="confirmMod" style="z-index:900">
+  <div class="mb" style="width:300px;text-align:center;">
+    <div style="padding:22px 20px 8px;font-family:'Cinzel',serif;font-size:.82rem;color:var(--text);letter-spacing:1px" id="confirmMsg">Are you sure?</div>
+    <div style="padding:12px 20px 20px;display:flex;gap:10px;">
+      <button class="home-btn" style="flex:1;padding:9px" onclick="confirmNo()">✕ No</button>
+      <button class="home-btn gold" style="flex:1;padding:9px" id="confirmYesBtn" onclick="confirmYes()">✓ Yes</button>
+    </div>
+  </div>
+</div>
+<div class="notif" id="notif"></div>
+<div id="tip"><div class="tn" id="tipN"></div><div class="tr" id="tipR"></div><div class="td" id="tipD"></div></div>
+<script>
+const ORES=[
+  {id:'stone',    name:'Stone',       tier:0,  w:400, val:1,    rar:'COMMON',    c:['#6a6458','#888070','#a09888','#3a3430']},
+  {id:'coal',     name:'Coal',        tier:1,  w:300, val:2,    rar:'COMMON',    c:['#6a6458','#2a2820','#4a4840','#101010']},
+  {id:'iron',     name:'Iron Ore',    tier:2,  w:200, val:5,    rar:'COMMON',    c:['#7a6858','#c09070','#e0b090','#5a3820']},
+  {id:'copper',   name:'Copper',      tier:3,  w:150, val:8,    rar:'COMMON',    c:['#6a5848','#c07040','#e09050','#6a3010']},
+  {id:'tin',      name:'Tin',         tier:4,  w:120, val:12,   rar:'UNCOMMON',  c:['#7a7878','#b0c0c8','#d0e0e8','#4a5858']},
+  {id:'silver',   name:'Silver',      tier:5,  w:90,  val:20,   rar:'UNCOMMON',  c:['#707880','#c0ccd8','#e8f0f8','#404850']},
+  {id:'gold',     name:'Gold',        tier:6,  w:65,  val:35,   rar:'UNCOMMON',  c:['#6a5838','#d4a830','#f8d060','#7a5010']},
+  {id:'quartz',   name:'Quartz',      tier:7,  w:50,  val:55,   rar:'RARE',      c:['#787068','#e8e0d8','#fff8f0','#9a9088']},
+  {id:'emerald',  name:'Emerald',     tier:8,  w:38,  val:80,   rar:'RARE',      c:['#486840','#30b060','#50e880','#184028']},
+  {id:'ruby',     name:'Ruby',        tier:9,  w:28,  val:120,  rar:'RARE',      c:['#684040','#c03030','#f05050','#380808']},
+  {id:'sapphire', name:'Sapphire',    tier:10, w:20,  val:170,  rar:'EPIC',      c:['#404868','#3050c0','#5080f0','#081838']},
+  {id:'amethyst', name:'Amethyst',    tier:11, w:14,  val:240,  rar:'EPIC',      c:['#584068','#9040d0','#c060ff','#280838']},
+  {id:'titanium', name:'Titanium',    tier:12, w:10,  val:340,  rar:'EPIC',      c:['#606870','#8098b0','#a0c0d8','#303840']},
+  {id:'obsidian', name:'Obsidian',    tier:13, w:7,   val:480,  rar:'EPIC',      c:['#181418','#302838','#483060','#080408']},
+  {id:'mithril',  name:'Mithril',     tier:14, w:5,   val:680,  rar:'LEGENDARY', c:['#384858','#40a8c8','#60d8f8','#102030']},
+  {id:'orichalcum',name:'Orichalcum', tier:15, w:3,   val:950,  rar:'LEGENDARY', c:['#583828','#c87030','#f8a840','#281008']},
+  {id:'dragonite',name:'Dragonite',   tier:16, w:2,   val:1400, rar:'LEGENDARY', c:['#304818','#60a820','#90e830','#101808']},
+  {id:'voidstone',name:'Voidstone',   tier:17, w:1.2, val:2000, rar:'MYTHIC',    c:['#100c14','#601090','#6020a0','#050308']},
+  {id:'stardust', name:'Stardust',    tier:18, w:0.6, val:3000, rar:'MYTHIC',    c:['#281828','#a060d0','#f0c0ff','#100810']},
+  {id:'celestite',name:'Celestite',   tier:19, w:0.2, val:5000, rar:'MYTHIC',    c:['#181020','#6040c0','#c0a0ff','#080410']},
+];
+const RC={COMMON:'#a09880',UNCOMMON:'#50c050',RARE:'#4080f0',EPIC:'#a040e0',LEGENDARY:'#f0a020',MYTHIC:'#ff60c0'};
+const TW=ORES.reduce((s,o)=>s+o.w,0);
+// SIZES: weight (out of total), value multiplier, visual scale, label, color
+const SIZES=[
+  {id:'tiny',     label:'Tiny',    w:5,     mul:0.9,  sc:0.52, col:'#6a6458'},
+  {id:'small',    label:'Small',   w:30,    mul:1.1,  sc:0.64, col:'#8a9878'},
+  {id:'normal',   label:'Normal',  w:50,    mul:1.2,  sc:0.78, col:'#a09880'},
+  {id:'big',      label:'Big',     w:8,     mul:1.3,  sc:0.90, col:'#60c060'},
+  {id:'huge',     label:'Huge',    w:0.2,   mul:2.0,  sc:1.02, col:'#4080f0'},
+  {id:'titanic',  label:'Titanic', w:0.004, mul:4.0,  sc:1.18, col:'#ff60c0'},
+];
+const SW=SIZES.reduce((s,z)=>s+z.w,0);
+function randSize(){let r=Math.random()*SW,c=0;for(const z of SIZES){c+=z.w;if(r<c)return z;}return SIZES[SIZES.length-1];}
+function makeOreItem(ore,gx,gy,id){
+  const sz=randSize();
+  const val=Math.round(ore.val*sz.mul);
+  return{id,x:gx,y:gy,px:gx,py:gy,ore,size:sz,val,processed:false};
+}
+// Fixed randOre — fallback to last ore, not first (avoids float edge case)
+function randOre(){let r=Math.random()*TW,c=0;for(const o of ORES){c+=o.w;if(r<c)return o;}return ORES[ORES.length-1];}
+const TSZ=32;const TC={};
+function h2r(hex){hex=hex.replace('#','').padEnd(6,'0');const n=parseInt(hex,16);return[(n>>16)&255,(n>>8)&255,n&255];}
+function blC(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t));}
+function sn(x,y,s){const n=Math.sin(x*127.1+y*311.7+s*74.3)*43758.5453;return n-Math.floor(n);}
+function ha(hex,a){const[r,g,b]=h2r(hex);return`rgba(${r},${g},${b},${a})`;}
+function genOre(ore){
+  if(TC[ore.id])return TC[ore.id];
+  const cv=document.createElement('canvas');cv.width=cv.height=TSZ;
+  const cx=cv.getContext('2d');const im=cx.createImageData(TSZ,TSZ);const d=im.data;
+  const[sc,vc,hc,shc]=ore.c.map(h2r);const seed=ore.tier*17.3;
+  for(let y=0;y<TSZ;y++)for(let x=0;x<TSZ;x++){
+    const i=(y*TSZ+x)*4;
+    const noise=sn(x*.4,y*.4,seed)*.5+sn(x*.8+5,y*.8+5,seed+1)*.3+sn(x*1.5+10,y*1.5+10,seed+2)*.2;
+    const v1=sn(x*.3,y*.3,seed+5),v2=sn(x*.35+8,y*.28+3,seed+6);
+    const vS=Math.max(0,(v1-.4)*4)*Math.max(0,(v2-.38)*4);
+    const crack=sn(x*2.5,y*.6,seed+9)>.78&&sn(x*.6,y*2.5,seed+10)>.78;
+    const hl=(x<6&&y<6)?(1-(x+y)/12)*.5:0;
+    const sh=(x>TSZ-7&&y>TSZ-7)?((x+y-2*(TSZ-7))/12)*.4:0;
+    let col=blC(sc,sc.map(v=>Math.min(255,v+noise*30-15)),noise);
+    col=blC(col,vc,vS*.85);if(crack)col=blC(col,shc,.5);
+    col=blC(col,hc,hl);col=blC(col,shc,sh);
+    if(vS>.5&&sn(x*3,y*3,seed+20)>.88)col=blC(col,[255,255,255],.4);
+    d[i]=Math.min(255,Math.max(0,col[0]));d[i+1]=Math.min(255,Math.max(0,col[1]));
+    d[i+2]=Math.min(255,Math.max(0,col[2]));d[i+3]=255;
+  }
+  cx.putImageData(im,0,0);TC[ore.id]=cv;return cv;
+}
+function genMach(type){
+  const cv=document.createElement('canvas');cv.width=cv.height=TSZ;const cx=cv.getContext('2d');
+  const S={
+    miner:     {bg:'#1a1208',br:'#6a5020',ac:'#d4a030'},
+    conveyor:  {bg:'#080c14',br:'#203058',ac:'#4080d0'},
+    chest:     {bg:'#1e0808',br:'#701010',ac:'#d04040'},
+    furnace:   {bg:'#180a04',br:'#a03010',ac:'#f05010'},
+    sorter:    {bg:'#0c1408',br:'#306020',ac:'#50c040'},
+    crusher:   {bg:'#140c08',br:'#703818',ac:'#e07030'},
+    vault:     {bg:'#100c1a',br:'#5020a0',ac:'#a060e0'},
+    refinery:  {bg:'#081418',br:'#206080',ac:'#40c0e0'},
+    forge:     {bg:'#140808',br:'#802020',ac:'#e04040'},
+    targetminer:{bg:'#181008',br:'#806020',ac:'#e0b030'},
+    storage:   {bg:'#100c08',br:'#604820',ac:'#c09050'},
+    extractor: {bg:'#0c1018',br:'#204060',ac:'#3080c0'},
+    merger:    {bg:'#0c1008',br:'#204820',ac:'#40a060'},
+  };
+  const s=S[type]||S.miner;
+  const g=cx.createLinearGradient(0,0,TSZ,TSZ);
+  g.addColorStop(0,s.bg);g.addColorStop(1,s.br+'44');
+  cx.fillStyle=g;cx.fillRect(0,0,TSZ,TSZ);
+  for(let i=0;i<80;i++){cx.fillStyle=`rgba(255,255,255,${Math.random()*.04})`;cx.fillRect(Math.random()*TSZ,Math.random()*TSZ,1,1);}
+  cx.strokeStyle=s.br;cx.lineWidth=2;cx.strokeRect(1,1,TSZ-2,TSZ-2);
+  cx.strokeStyle=s.ac;cx.lineWidth=1.5;
+  [[2,2],[TSZ-2,2],[2,TSZ-2],[TSZ-2,TSZ-2]].forEach(([px,py])=>{
+    const sx=px<TSZ/2?1:-1,sy=py<TSZ/2?1:-1;
+    cx.beginPath();cx.moveTo(px+sx*5,py);cx.lineTo(px,py);cx.lineTo(px,py+sy*5);cx.stroke();
+  });
+  const gl=cx.createRadialGradient(TSZ/2,TSZ/2,0,TSZ/2,TSZ/2,TSZ*.4);
+  gl.addColorStop(0,ha(s.ac,.18));gl.addColorStop(1,'transparent');
+  cx.fillStyle=gl;cx.fillRect(0,0,TSZ,TSZ);
+  // Draw icon as canvas primitives — no emoji/font dependency
+  cx.save();cx.strokeStyle=s.ac;cx.fillStyle=s.ac;cx.lineWidth=2;cx.lineCap='round';cx.lineJoin='round';
+  const m=TSZ/2,r=TSZ*.18,r2=TSZ*.12;
+  if(type==='miner'){
+    // Pickaxe shape
+    cx.beginPath();cx.moveTo(m-6,m+7);cx.lineTo(m+6,m-7);cx.stroke();
+    cx.beginPath();cx.moveTo(m+2,m-9);cx.lineTo(m+9,m-5);cx.lineTo(m+5,m+1);cx.closePath();cx.fill();
+    cx.beginPath();cx.moveTo(m-2,m-5);cx.lineTo(m-8,m-9);cx.lineTo(m-6,m-2);cx.closePath();cx.fill();
+  } else if(type==='conveyor'){
+    // Arrow right
+    cx.beginPath();cx.moveTo(m-8,m-3);cx.lineTo(m+2,m-3);cx.lineTo(m+2,m-7);cx.lineTo(m+9,m);cx.lineTo(m+2,m+7);cx.lineTo(m+2,m+3);cx.lineTo(m-8,m+3);cx.closePath();cx.fill();
+  } else if(type==='chest'){
+    // X mark
+    cx.lineWidth=3;
+    cx.beginPath();cx.moveTo(m-7,m-7);cx.lineTo(m+7,m+7);cx.stroke();
+    cx.beginPath();cx.moveTo(m+7,m-7);cx.lineTo(m-7,m+7);cx.stroke();
+  } else if(type==='furnace'){
+    // Flame shape
+    cx.beginPath();cx.moveTo(m,m-9);cx.bezierCurveTo(m+8,m-4,m+7,m+4,m+2,m+7);cx.bezierCurveTo(m+5,m+3,m+2,m,m+2,m);cx.bezierCurveTo(m+4,m-2,m+1,m-7,m,m-9);cx.fill();
+    cx.globalAlpha=.6;cx.fillStyle='#fff';
+    cx.beginPath();cx.moveTo(m,m-4);cx.bezierCurveTo(m+4,m,m+3,m+5,m+1,m+6);cx.bezierCurveTo(m+3,m+3,m+1,m+1,m+1,m+1);cx.bezierCurveTo(m+2,m-1,m+1,m-4,m,m-4);cx.fill();
+  } else if(type==='sorter'){
+    // Fork / branch arrow
+    cx.lineWidth=2;
+    cx.beginPath();cx.moveTo(m-8,m);cx.lineTo(m+2,m);cx.stroke();
+    cx.beginPath();cx.moveTo(m+2,m);cx.lineTo(m+8,m-6);cx.stroke();
+    cx.beginPath();cx.moveTo(m+2,m);cx.lineTo(m+8,m+6);cx.stroke();
+    // arrowheads
+    cx.beginPath();cx.moveTo(m+8,m-6);cx.lineTo(m+5,m-6);cx.moveTo(m+8,m-6);cx.lineTo(m+8,m-3);cx.stroke();
+    cx.beginPath();cx.moveTo(m+8,m+6);cx.lineTo(m+5,m+6);cx.moveTo(m+8,m+6);cx.lineTo(m+8,m+3);cx.stroke();
+  } else if(type==='crusher'){
+    // Two opposing triangles (crush)
+    cx.beginPath();cx.moveTo(m-8,m-9);cx.lineTo(m+8,m-9);cx.lineTo(m,m-2);cx.closePath();cx.fill();
+    cx.beginPath();cx.moveTo(m-8,m+9);cx.lineTo(m+8,m+9);cx.lineTo(m,m+2);cx.closePath();cx.fill();
+  } else if(type==='vault'){
+    // Circle with star/lock
+    cx.beginPath();cx.arc(m,m,r,0,Math.PI*2);cx.stroke();
+    cx.beginPath();cx.arc(m,m,r2,0,Math.PI*2);cx.fill();
+    // key notch
+    cx.fillStyle=s.bg;cx.beginPath();cx.arc(m,m,r2*.55,0,Math.PI*2);cx.fill();
+    cx.fillStyle=s.ac;cx.fillRect(m-1,m,2,r2+1);
+  } else if(type==='refinery'){
+    // Upward arrow with circles (upgrade)
+    cx.beginPath();cx.moveTo(m,m+9);cx.lineTo(m,m-4);cx.stroke();
+    cx.beginPath();cx.moveTo(m-6,m+1);cx.lineTo(m,m-7);cx.lineTo(m+6,m+1);cx.fill();
+    cx.beginPath();cx.arc(m,m+7,r2*.8,0,Math.PI*2);cx.fill();
+  } else if(type==='forge'){
+    // Diamond shape
+    cx.beginPath();cx.moveTo(m,m-10);cx.lineTo(m+8,m);cx.lineTo(m,m+10);cx.lineTo(m-8,m);cx.closePath();cx.stroke();
+    cx.globalAlpha=.4;cx.fill();cx.globalAlpha=1;
+    cx.beginPath();cx.arc(m,m,r2*.7,0,Math.PI*2);cx.fill();
+  } else if(type==='targetminer'){
+    // Target / crosshair
+    cx.beginPath();cx.arc(m,m,r,0,Math.PI*2);cx.stroke();
+    cx.beginPath();cx.arc(m,m,r*.5,0,Math.PI*2);cx.stroke();
+    cx.lineWidth=1.5;
+    cx.beginPath();cx.moveTo(m-r-3,m);cx.lineTo(m+r+3,m);cx.stroke();
+    cx.beginPath();cx.moveTo(m,m-r-3);cx.lineTo(m,m+r+3);cx.stroke();
+    cx.beginPath();cx.arc(m,m,2,0,Math.PI*2);cx.fill();
+  } else if(type==='storage'){
+    // Box / crate
+    cx.strokeRect(m-7,m-7,14,14);
+    cx.beginPath();cx.moveTo(m-7,m);cx.lineTo(m+7,m);cx.stroke();
+    cx.beginPath();cx.moveTo(m,m-7);cx.lineTo(m,m);cx.stroke();
+  } else if(type==='extractor'){
+    // Arrow pulling out of box
+    cx.strokeRect(m-9,m-4,9,8);
+    cx.beginPath();cx.moveTo(m+1,m-3);cx.lineTo(m+8,m-3);cx.lineTo(m+8,m-7);cx.lineTo(m+13,m);cx.lineTo(m+8,m+7);cx.lineTo(m+8,m+3);cx.lineTo(m+1,m+3);cx.closePath();cx.fill();
+  } else if(type==='merger'){
+    // Two arrows merging into one
+    cx.lineWidth=2;
+    cx.beginPath();cx.moveTo(m-9,m-6);cx.lineTo(m,m);cx.stroke();
+    cx.beginPath();cx.moveTo(m-9,m+6);cx.lineTo(m,m);cx.stroke();
+    cx.beginPath();cx.moveTo(m,m);cx.lineTo(m+9,m);cx.stroke();
+    // arrowhead right
+    cx.beginPath();cx.moveTo(m+9,m);cx.lineTo(m+5,m-4);cx.moveTo(m+9,m);cx.lineTo(m+5,m+4);cx.stroke();
+  }
+  cx.restore();
+  return cv;
+}
+ORES.forEach(o=>genOre(o));
+const MT=['miner','conveyor','chest','furnace','sorter','crusher','vault','refinery','forge','targetminer','storage','extractor','merger'];
+const MTex={};MT.forEach(t=>MTex[t]=genMach(t));
+MT.forEach(t=>{const el=document.getElementById('icon-'+t);if(!el)return;const c=MTex[t].cloneNode(true);c.style.cssText='width:100%;height:100%;image-rendering:pixelated;';el.appendChild(c);});
+const SHOP={miner:10,conveyor:3,chest:5,furnace:25,sorter:30,crusher:50,vault:20,refinery:35,forge:60,targetminer:40,storage:15,extractor:25,merger:20};
+const COLS=18,ROWS=12,CELL=48,MBASE=6;
+const DIRS={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]};
+const DA={N:'↑',E:'→',S:'↓',W:'←'};
+let grid={},items=[];
+let coins=50,totalEarned=0,banked=0;
+let tick=0,running=false;
+const SIM_MS=620; // ms per tick — comfortable pace, no slider needed
+let animT=0,lastSimTime=0; // animT: 0→1 between ticks for smooth lerp
+let curTool='pointer',curDir='S';
+let discovered=new Set(),inventory=[],logs=[];
+let nid=1,notifT=null;
+let activeUpgKey=null,orePickerKey=null,storageKey=null;
+let panX=0,panY=0,isPan=false,pStart={x:0,y:0},pOrigin={x:0,y:0};
+let hoverX=-1,hoverY=-1;
+let botTab=0;
+function gk(x,y){return`${x},${y}`;}
+function gc2(x,y){return grid[gk(x,y)]||null;}
+function selTool(t){
+  curTool=t;
+  document.querySelectorAll('.mslot').forEach(b=>b.classList.remove('sel'));
+  document.querySelector(`.mslot[data-tool="${t}"]`)?.classList.add('sel');
+  document.querySelectorAll('.tslot').forEach(b=>b.classList.remove('sel'));
+  document.querySelector(`.tslot[data-tool="${t}"]`)?.classList.add('sel');
+  document.getElementById('gWrap').style.cursor=t==='pointer'?'default':t==='erase'?'cell':'crosshair';
+  if(t==='pointer'||t==='erase')document.getElementById('ghostBtns')?.classList.remove('vis');
+}
+function setDir(d){curDir=d;}
+const canvas=document.getElementById('gc');
+const ctx=canvas.getContext('2d');
+function resize(){const w=document.getElementById('gWrap');canvas.width=w.clientWidth;canvas.height=w.clientHeight;draw();}
+window.addEventListener('resize',resize);
+function off(){return{ox:Math.floor((canvas.width-COLS*CELL)/2)+panX,oy:Math.floor((canvas.height-ROWS*CELL)/2)+panY};}
+function s2g(mx,my){const rect=document.getElementById('gWrap').getBoundingClientRect();const{ox,oy}=off();return[Math.floor((mx-rect.left-ox)/CELL),Math.floor((my-rect.top-oy)/CELL)];}
+function draw(ts){
+  const W=canvas.width,H=canvas.height;const{ox,oy}=off();
+  const t=animT; // 0→1 sub-tick lerp
+  const now=ts||0;
+
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#080602';ctx.fillRect(0,0,W,H);
+  // Grid tiles
+  for(let x=0;x<COLS;x++)for(let y=0;y<ROWS;y++){
+    const px=ox+x*CELL,py=oy+y*CELL;
+    if(!gc2(x,y)){ctx.drawImage(TC['stone'],px,py,CELL,CELL);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(px,py,CELL,CELL);}
+    ctx.strokeStyle='rgba(0,0,0,.55)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,CELL-1,CELL-1);
+    if(curTool==='pointer'){const c=gc2(x,y);if(c&&['miner','targetminer','extractor','storage','forge'].includes(c.type)){ctx.strokeStyle='rgba(212,168,67,.35)';ctx.lineWidth=1.5;ctx.strokeRect(px+1.5,py+1.5,CELL-3,CELL-3);}}
+  }
+  // Machines
+  for(const[k,cell]of Object.entries(grid)){const[x,y]=k.split(',').map(Number);dMach(cell,ox+x*CELL,oy+y*CELL,x,y,t,now);}
+  // Items (lerped)
+  for(const item of items)dItem(item,ox,oy,t);
+  ctx.strokeStyle='rgba(212,168,67,.1)';ctx.lineWidth=2;ctx.strokeRect(ox,oy,COLS*CELL,ROWS*CELL);
+  dGhost(ox,oy);
+}
+function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+const _gb=document.getElementById('ghostBtns');
+const _gbOk=document.getElementById('gbOk');
+const _gbCancel=document.getElementById('gbCancel');
+const _gbRot=document.getElementById('gbRot');
+function hideGhostBtns(){_gb.classList.remove('vis');}
+function posGhostBtns(tilePx,tilePy,canPlace,ox,oy){
+  // Convert canvas coords to gWrap-relative coords
+  const rect=canvas.getBoundingClientRect();
+  const wrap=document.getElementById('gWrap').getBoundingClientRect();
+  const offX=rect.left-wrap.left;
+  const offY=rect.top-wrap.top;
+  const tx=tilePx+offX, ty=tilePy+offY;
+  const C=CELL, B=38, GAP=5;
+  // ✓ top-right of tile
+  _gbOk.style.left=(tx+C-B/2)+'px';
+  _gbOk.style.top=(ty-B/2-GAP)+'px';
+  // ✕ top-left of tile
+  _gbCancel.style.left=(tx-B/2)+'px';
+  _gbCancel.style.top=(ty-B/2-GAP)+'px';
+  // ↻ bottom-center of tile
+  _gbRot.style.left=(tx+C/2-B/2)+'px';
+  _gbRot.style.top=(ty+C-B/2+GAP)+'px';
+  // grey out ✓ if can't place
+  _gbOk.classList.toggle('disabled',!canPlace);
+  _gb.classList.add('vis');
+}
+// Button actions — pointerdown works for both mouse and touch
+function gbListen(el,fn){
+  el.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn();});
+}
+gbListen(_gbOk,()=>{if(!_gbOk.classList.contains('disabled'))placeCurrent(hoverX,hoverY);});
+gbListen(_gbCancel,()=>selTool('pointer'));
+gbListen(_gbRot,()=>{const dirs=['N','E','S','W'];setDir(dirs[(dirs.indexOf(curDir)+1)%4]);});
+function dGhost(ox,oy){
+  const isPlace=curTool!=='pointer'&&curTool!=='erase'&&SHOP[curTool]!==undefined;
+  const isErase=curTool==='erase';
+  if(hoverX<0||hoverY<0||hoverX>=COLS||hoverY>=ROWS){hideGhostBtns();return;}
+  if(!isPlace&&!isErase){hideGhostBtns();return;}
+
+  const px=ox+hoverX*CELL,py=oy+hoverY*CELL;
+  const occupied=!!gc2(hoverX,hoverY);
+  const canAfford=coins>=(SHOP[curTool]||0);
+  const canPlace=!occupied&&canAfford;
+
+  if(isErase){
+    hideGhostBtns();
+    if(!occupied)return;
+    ctx.save();
+    ctx.fillStyle='rgba(200,40,30,.25)';ctx.fillRect(px,py,CELL,CELL);
+    ctx.strokeStyle='rgba(220,60,40,.9)';ctx.lineWidth=2;ctx.strokeRect(px+1,py+1,CELL-2,CELL-2);
+    ctx.strokeStyle='rgba(220,60,40,.8)';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(px+8,py+8);ctx.lineTo(px+CELL-8,py+CELL-8);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(px+CELL-8,py+8);ctx.lineTo(px+8,py+CELL-8);ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  // Ghost tile
+  const tex=MTex[curTool];
+  ctx.save();
+  ctx.globalAlpha=canPlace?.55:.3;
+  if(tex)ctx.drawImage(tex,px,py,CELL,CELL);
+  ctx.restore();
+
+  // Direction arrow
+  const[dx,dy]=DIRS[curDir];
+  ctx.save();ctx.globalAlpha=.9;
+  ctx.fillStyle=canPlace?'rgba(255,255,255,.95)':'rgba(255,100,80,.8)';
+  ctx.font=`bold ${CELL*.26}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(DA[curDir],px+CELL/2+dx*CELL*.24,py+CELL/2+dy*CELL*.24);
+  ctx.restore();
+
+  // Border
+  ctx.save();
+  ctx.strokeStyle=canPlace?'rgba(80,220,80,.8)':'rgba(220,60,40,.8)';
+  ctx.lineWidth=2;ctx.strokeRect(px+1,py+1,CELL-2,CELL-2);
+  ctx.restore();
+
+  // Position the HTML overlay buttons
+  posGhostBtns(px,py,canPlace,ox,oy);
+}
+function dMach(cell,px,py,gx,gy,t,now){
+  const tex=MTex[cell.type];if(tex)ctx.drawImage(tex,px,py,CELL,CELL);
+  const[dx,dy]=DIRS[cell.dir];
+
+  // === CONVEYOR: animated belt scroll lines ===
+  if(cell.type==='conveyor'){
+    const et=ease(t);
+    ctx.save();ctx.globalAlpha=.18;ctx.strokeStyle='#a0c8ff';ctx.lineWidth=1.5;
+    const scroll=et*CELL;
+    // Draw 3 stripes scrolling in direction
+    for(let i=-1;i<3;i++){
+      const sx=px+dx*(scroll+i*CELL*.5),sy=py+dy*(scroll+i*CELL*.5);
+      const cx2=Math.max(px,Math.min(px+CELL,sx+CELL*.5*Math.abs(dy)));
+      const cy2=Math.max(py,Math.min(py+CELL,sy+CELL*.5*Math.abs(dx)));
+      ctx.beginPath();
+      if(dx!==0){// horizontal belt — vertical stripes
+        const lx=px+((scroll+i*CELL*.5)%CELL+CELL)%CELL;
+        if(lx>=px&&lx<px+CELL){ctx.moveTo(lx,py+3);ctx.lineTo(lx,py+CELL-3);}
+      } else {// vertical belt — horizontal stripes
+        const ly=py+((scroll+i*CELL*.5)%CELL+CELL)%CELL;
+        if(ly>=py&&ly<py+CELL){ctx.moveTo(px+3,ly);ctx.lineTo(px+CELL-3,ly);}
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // === FURNACE: fire glow + sparks ===
+  if(cell.type==='furnace'){
+    const active=items.some(i=>i.x===gx&&i.y===gy||(i.px===gx&&i.py===gy));
+    const pulse=.5+.5*Math.sin(now*.008);
+    ctx.save();
+    const gl=ctx.createRadialGradient(px+CELL/2,py+CELL*.7,0,px+CELL/2,py+CELL*.7,CELL*.6);
+    gl.addColorStop(0,`rgba(255,${80+pulse*60|0},0,${active?.35:.1})`);
+    gl.addColorStop(1,'transparent');
+    ctx.fillStyle=gl;ctx.fillRect(px,py,CELL,CELL);
+    if(active){
+      // sparks
+      for(let s=0;s<4;s++){
+        const ang=now*.003+s*1.57;const r=CELL*.18+Math.sin(now*.007+s)*CELL*.08;
+        const sx=px+CELL/2+Math.cos(ang)*r,sy=py+CELL*.5+Math.sin(ang*.7)*r*.5;
+        ctx.beginPath();ctx.arc(sx,sy,1.5,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,${150+s*20},0,${.6+.3*Math.sin(now*.011+s)})`;ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // === REFINERY: blue bubble rings ===
+  if(cell.type==='refinery'){
+    const active=items.some(i=>i.x===gx&&i.y===gy);
+    ctx.save();ctx.globalAlpha=active?.5:.2;
+    const phase=(now*.002)%1;
+    for(let r=0;r<2;r++){
+      const p=(phase+r*.5)%1;
+      ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,CELL*.15+p*CELL*.3,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(60,200,240,${1-p})`;ctx.lineWidth=1.5;ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // === FORGE: intense orange pulse + spark burst ===
+  if(cell.type==='forge'){
+    const buf=(cell.data?.buffer||[]).length;
+    const pulse=.5+.5*Math.sin(now*.006);
+    ctx.save();
+    const gl=ctx.createRadialGradient(px+CELL/2,py+CELL/2,0,px+CELL/2,py+CELL/2,CELL*.55);
+    gl.addColorStop(0,`rgba(255,${60+buf*30},0,${.1+buf*.1+pulse*.08})`);
+    gl.addColorStop(1,'transparent');
+    ctx.fillStyle=gl;ctx.fillRect(px,py,CELL,CELL);
+    if(buf>0){
+      for(let s=0;s<buf*2;s++){
+        const ang=now*.005+s*2.09;const r=CELL*.25;
+        ctx.beginPath();ctx.arc(px+CELL/2+Math.cos(ang)*r,py+CELL/2+Math.sin(ang)*r,1.8,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,160,30,.8)`;ctx.fill();
+      }
+    }
+    ctx.restore();
+    // buffer count
+    ctx.font=`bold ${CELL*.22}px Cinzel`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=buf>=2?'#f05050':buf>=1?'#f0c060':'#6a5a40';ctx.fillText(`${buf}/3`,px+CELL/2,py+CELL/2+8);
+  }
+
+  // === CRUSHER: shudder effect ===
+  if(cell.type==='crusher'){
+    const active=items.some(i=>i.x===gx&&i.y===gy);
+    if(active&&t>.3&&t<.7){
+      ctx.save();
+      const shk=(Math.random()-.5)*3;
+      ctx.translate(shk,-Math.abs(shk));
+      ctx.drawImage(tex,px,py,CELL,CELL);
+      ctx.restore();
+    }
+    // impact flash at hit moment
+    if(active&&t<.15){
+      ctx.save();ctx.globalAlpha=(1-t/.15)*.35;
+      ctx.fillStyle='#fff';ctx.fillRect(px,py,CELL,CELL);ctx.restore();
+    }
+  }
+
+  // === SORTER: sweep highlight ===
+  if(cell.type==='sorter'){
+    const active=items.some(i=>i.x===gx&&i.y===gy);
+    if(active){
+      ctx.save();ctx.globalAlpha=ease(t)*.2;ctx.fillStyle='#50e040';ctx.fillRect(px,py,CELL,CELL);ctx.restore();
+    }
+  }
+
+  // === STORAGE: fill bar ===
+  if(cell.type==='storage'){
+    const cnt=(cell.data?.stored||[]).length,pct=cnt/30;
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(px+4,py+CELL-8,CELL-8,5);
+    ctx.fillStyle=pct>.8?'#e04040':pct>.5?'#e0a020':'#50c080';ctx.fillRect(px+4,py+CELL-8,(CELL-8)*pct,5);
+    ctx.font='bold 7px monospace';ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillStyle='rgba(200,170,100,.9)';ctx.fillText(`${cnt}/30`,px+4,py+3);
+  }
+
+  // === VAULT: coin sparkle ===
+  if(cell.type==='vault'){
+    const active=items.some(i=>i.x===gx&&i.y===gy);
+    if(active){
+      ctx.save();
+      for(let s=0;s<5;s++){
+        const ang=now*.004+s*1.26;const r=CELL*.2+Math.sin(now*.009+s)*CELL*.1;
+        const sx2=px+CELL/2+Math.cos(ang)*r,sy2=py+CELL/2+Math.sin(ang)*r;
+        ctx.beginPath();ctx.arc(sx2,sy2,1.5,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,210,40,${.5+.4*Math.sin(now*.013+s)})`;ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  // === EXTRACTOR: pull pulse ===
+  if(cell.type==='extractor'){
+    const prog=(cell.data?.progress||0)/4;
+    ctx.save();ctx.globalAlpha=prog*.3;
+    const gl2=ctx.createRadialGradient(px+CELL/2,py+CELL/2,0,px+CELL/2,py+CELL/2,CELL*.5);
+    gl2.addColorStop(0,'rgba(48,128,200,.6)');gl2.addColorStop(1,'transparent');
+    ctx.fillStyle=gl2;ctx.fillRect(px,py,CELL,CELL);ctx.restore();
+    if(cell.data?.targetOre){const o=ORES.find(x=>x.id===cell.data.targetOre);if(o){ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillStyle=RC[o.rar]||'#fff';ctx.fillText(o.name.slice(0,7),px+CELL/2,py+CELL-10);}}
+  }
+
+  // === MINER / TARGET MINER ===
+  if(cell.type==='miner'||cell.type==='targetminer'){
+    if(cell.type==='targetminer'&&cell.data?.targetOre){const tt=TC[cell.data.targetOre];if(tt){ctx.save();ctx.globalAlpha=.65;ctx.drawImage(tt,px+CELL*.18,py+CELL*.08,CELL*.64,CELL*.64);ctx.restore();}}
+    if(cell.data?.ore&&cell.type==='miner'){ctx.save();ctx.globalAlpha=.84;ctx.drawImage(TC[cell.data.ore.id],px+CELL*.07,py+CELL*.07,CELL*.86,CELL*.86);const vg=ctx.createRadialGradient(px+CELL/2,py+CELL/2,CELL*.17,px+CELL/2,py+CELL/2,CELL*.5);vg.addColorStop(0,'transparent');vg.addColorStop(1,'rgba(0,0,0,.6)');ctx.fillStyle=vg;ctx.fillRect(px,py,CELL,CELL);ctx.restore();}
+    const rate=cell.type==='targetminer'?MBASE+4:mRate(cell);const prog=(cell.data?.progress||0)/rate;
+    // Mining shake near end of cycle
+    if(prog>.75){
+      ctx.save();
+      const shk=(prog-.75)/.25; // 0→1 as approaching done
+      const jx=(Math.random()-.5)*shk*3,jy=-shk*2-Math.random()*shk;
+      ctx.translate(jx,jy);
+      // dust puff
+      ctx.globalAlpha=shk*.4;ctx.fillStyle='#b0a090';
+      ctx.beginPath();ctx.arc(px+CELL/2,py+CELL-6,shk*8,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    // progress bar
+    ctx.fillStyle='rgba(0,0,0,.65)';ctx.fillRect(px+4,py+CELL-8,CELL-8,5);
+    ctx.fillStyle=`hsl(${40+prog*20},78%,52%)`;ctx.fillRect(px+4,py+CELL-8,(CELL-8)*prog,5);
+    if(cell.type==='miner'){const s=cell.data?.upgSpd||0,l=cell.data?.upgLck||0,y2=cell.data?.upgYld||0;if(s||l||y2){ctx.font='bold 7px monospace';ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='rgba(255,200,60,.9)';ctx.fillText(`⚡${s}🍀${l}⛏${y2}`,px+3,py+3);}}
+  }
+
+  // Direction arrow (always on top)
+  ctx.save();ctx.globalAlpha=.6;ctx.fillStyle='rgba(255,255,255,.75)';
+  ctx.font=`bold ${CELL*.19}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(DA[cell.dir],px+CELL/2+dx*CELL*.27,py+CELL/2+dy*CELL*.27);ctx.restore();
+}
+function dItem(item,ox,oy,t){
+  const lx=item.px+(item.x-item.px)*ease(t);
+  const ly=item.py+(item.y-item.py)*ease(t);
+  const px=ox+lx*CELL,py=oy+ly*CELL;
+  const sc=item.size?.sc||0.78;
+  const S=CELL*sc*0.54,cx2=px+CELL/2,cy2=py+CELL/2;
+  const tex=TC[item.ore.id];if(!tex)return;
+  // Size ring for non-normal sizes
+  const sz=item.size;
+  if(sz&&sz.id!=='normal'&&sz.id!=='small'){
+    ctx.save();
+    const ringR=S/2+4+(sz.id==='titanic'?4:sz.id==='huge'?2:0);
+    ctx.beginPath();ctx.arc(cx2,cy2,ringR,0,Math.PI*2);
+    ctx.strokeStyle=sz.col;ctx.lineWidth=sz.id==='titanic'?2.5:1.5;
+    ctx.globalAlpha=sz.id==='titanic'?.9:sz.id==='huge'?.7:.45;
+    ctx.stroke();
+    // Titanic gets a second outer pulse ring
+    if(sz.id==='titanic'){
+      ctx.beginPath();ctx.arc(cx2,cy2,ringR+4,0,Math.PI*2);
+      ctx.lineWidth=1;ctx.globalAlpha=.4;ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // Rare glow aura
+  if(item.ore.tier>=7){ctx.save();ctx.beginPath();ctx.arc(cx2,cy2,S/2+6,0,Math.PI*2);const gl=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,S/2+6);gl.addColorStop(0,ha(item.ore.c[2],.12));gl.addColorStop(1,'transparent');ctx.fillStyle=gl;ctx.fill();ctx.restore();}
+  // Ore texture clipped to circle
+  ctx.save();ctx.beginPath();ctx.arc(cx2,cy2,S/2+1,0,Math.PI*2);ctx.clip();ctx.drawImage(tex,cx2-S/2,cy2-S/2,S,S);ctx.restore();
+  // Ore border ring
+  ctx.beginPath();ctx.arc(cx2,cy2,S/2+1,0,Math.PI*2);ctx.strokeStyle=ha(item.ore.c[2],.8);ctx.lineWidth=1.5;ctx.stroke();
+  // Processed smelted mark
+  if(item.processed){ctx.fillStyle='rgba(255,200,0,.88)';ctx.font=`bold ${CELL*.16}px serif`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('✦',cx2+S*.3,cy2-S*.46);}
+  // Size label for titanic/huge only
+  if(sz&&(sz.id==='titanic'||sz.id==='huge')){
+    ctx.font=`bold ${CELL*.13}px Cinzel`;ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillStyle=sz.col;ctx.fillText(sz.label,cx2,cy2-S/2-5);
+  }
+}
+let needsTimeSync=false;
+function startSim(){running=true;needsTimeSync=true;}
+function pauseSim(){running=false;}
+function toggleRun(){running?pauseSim():startSim();}
+function mRate(cell){return Math.max(2,MBASE-Math.min(4,cell.data?.upgSpd||0));}
+function mOre(cell){
+  const lck=cell.data?.upgLck||0;if(!lck)return randOre();
+  const boosted=ORES.map(o=>({...o,w:o.w+(o.tier>=7?o.w*lck*.06:0)}));
+  const tot=boosted.reduce((s,o)=>s+o.w,0);let r=Math.random()*tot,c=0;
+  for(const o of boosted){c+=o.w;if(r<c)return ORES.find(x=>x.id===o.id);}return ORES[ORES.length-1];
+}
+function mYield(cell){return(cell.data?.upgYld||0)>0&&Math.random()<(cell.data.upgYld*.08)?2:1;}
+function discoverOre(ore){
+  if(discovered.has(ore.id))return;
+  discovered.add(ore.id);
+  const lt=ore.tier>=17?'epic':ore.tier>=14?'rare':ore.tier>=7?'good':'';
+  addLog(`Discovered: ${ore.name}!`,lt);
+  if(ore.tier>=14)showNotif(`✨ ${ore.name} discovered!`);
+  if(infoOpen&&infoTab===1)renderInfoContent();
+}
+function stepSim(){
+  tick++;
+  document.getElementById('tickLbl').textContent=tick;
+  document.getElementById('depthLbl').textContent=Math.floor(tick/10)+1;
+  for(const[k,cell]of Object.entries(grid)){
+    if(cell.type!=='miner'&&cell.type!=='targetminer')continue;
+    cell.data.progress=(cell.data.progress||0)+1;
+    const rate=cell.type==='targetminer'?MBASE+4:mRate(cell);
+    if(cell.data.progress>=rate){
+      cell.data.progress=0;
+      let ore=cell.type==='targetminer'&&cell.data.targetOre?ORES.find(o=>o.id===cell.data.targetOre)||randOre():mOre(cell);
+      cell.data.ore=ore;
+      const[gx,gy]=k.split(',').map(Number);
+      const yc=cell.type==='targetminer'?1:mYield(cell);
+      for(let i=0;i<yc;i++)items.push(makeOreItem(ore,gx,gy,nid++));
+      discoverOre(ore);
+    }
+  }
+  for(const[k,cell]of Object.entries(grid)){
+    if(cell.type!=='extractor')continue;
+    cell.data.progress=(cell.data.progress||0)+1;
+    if(cell.data.progress<4)continue;
+    cell.data.progress=0;
+    const[gx,gy]=k.split(',').map(Number);
+    const[fdx,fdy]=DIRS[cell.dir];
+    const stor=gc2(gx-fdx,gy-fdy);
+    if(!stor||stor.type!=='storage'||!stor.data.stored?.length)continue;
+    const tid=cell.data.targetOre;
+    const idx=tid?stor.data.stored.findIndex(e=>(e.ore||e).id===tid):0;
+    if(idx<0)continue;
+    const storedEntry=stor.data.stored.splice(idx,1)[0];
+    // stored entries are now {ore,val,size} objects
+    const ore=storedEntry.ore||storedEntry;
+    const nx=gx+fdx,ny=gy+fdy;
+    if(nx>=0&&ny>=0&&nx<COLS&&ny<ROWS){
+      const ni=makeOreItem(ore,nx,ny,nid++);
+      ni.px=gx;ni.py=gy;
+      if(storedEntry.size){ni.size=storedEntry.size;ni.val=storedEntry.val;}
+      items.push(ni);
+    }
+  }
+  const dead=new Set();
+  for(const item of items){
+    if(dead.has(item.id))continue;
+    const cell=gc2(item.x,item.y);
+    if(!cell){dead.add(item.id);continue;}
+    const[dx,dy]=DIRS[cell.dir];
+    const nx=item.x+dx,ny=item.y+dy;
+    if(cell.type==='furnace'&&!item.processed){item.val=Math.round(item.val*2);item.processed=true;}
+    if(cell.type==='crusher'&&Math.random()<.25){items.push({...item,id:nid++,px:item.x,py:item.y});}
+    if(cell.type==='refinery'){const nt=Math.min(19,item.ore.tier+1);const newOre=ORES[nt];item.ore=newOre;item.val=Math.round(newOre.val*item.size.mul);discoverOre(newOre);}
+    if(cell.type==='forge'){
+      if(!cell.data.buffer)cell.data.buffer=[];
+      cell.data.buffer.push(item.ore);dead.add(item.id);
+      if(cell.data.buffer.length>=3){
+        const bt=cell.data.buffer[0].tier;const ot=Math.min(19,bt+3);const outOre=ORES[ot];
+        cell.data.buffer=[];
+        const[gx2,gy2]=Object.entries(grid).find(([k2])=>grid[k2]===cell)[0].split(',').map(Number);
+        const onx=gx2+dx,ony=gy2+dy;
+        if(onx>=0&&ony>=0&&onx<COLS&&ony<ROWS){const fi=makeOreItem(outOre,onx,ony,nid++);fi.px=gx2;fi.py=gy2;items.push(fi);}
+        discoverOre(outOre);if(outOre.tier>=14)showNotif(`⚗ Forged: ${outOre.name}!`);
+      }
+      continue;
+    }
+    if(cell.type==='storage'){if(!cell.data.stored)cell.data.stored=[];if(cell.data.stored.length<30)cell.data.stored.push({ore:item.ore,val:item.val,size:item.size});dead.add(item.id);continue;}
+    if(cell.type==='sorter'){
+      const ord=['N','E','S','W'];const bi=ord.indexOf(cell.dir);const od=item.ore.tier>=10?ord[(bi+1)%4]:cell.dir;
+      const[sdx,sdy]=DIRS[od];const snx=item.x+sdx,sny=item.y+sdy;
+      if(snx<0||sny<0||snx>=COLS||sny>=ROWS||!gc2(snx,sny)){dead.add(item.id);continue;}
+      item.px=item.x;item.py=item.y;item.x=snx;item.y=sny;continue;
+    }
+    if(cell.type==='vault'){
+      const v=item.val;
+      coins+=v;totalEarned+=v;banked++;
+      inventory.unshift({ore:item.ore,val:v,size:item.size,processed:item.processed});
+      if(inventory.length>36)inventory.pop();
+      dead.add(item.id);
+      const szl=item.size.id!=='normal'?` [${item.size.label}]`:'';
+      addLog(`+${v}🪙 ${item.ore.name}${szl}`,item.ore.tier>=14?'rare':item.ore.tier>=7?'good':'');
+      if(item.size.id==='titanic')showNotif(`✨ TITANIC ${item.ore.name}! +${v}🪙`);
+      if(infoOpen&&infoTab===0)renderInfoContent();continue;
+    }
+    if(cell.type==='chest'){dead.add(item.id);continue;}
+    if(nx<0||ny<0||nx>=COLS||ny>=ROWS||!gc2(nx,ny)){dead.add(item.id);continue;}
+    item.px=item.x;item.py=item.y;item.x=nx;item.y=ny;
+  }
+  for(let i=items.length-1;i>=0;i--)if(dead.has(items[i].id))items.splice(i,1);
+  if(items.length>300)items.splice(0,items.length-300);
+  updateStats();
+}
+function confirmClear(){if(!Object.keys(grid).length)return;confirmDo('Clear the grid?',clearAll);}
+function clearAll(){Object.keys(grid).forEach(k=>delete grid[k]);items.length=0;tick=0;inventory=[];logs=[];updateStats();if(infoOpen)renderInfoContent();draw();}
+function placeCurrent(x,y){
+  if(x<0||y<0||x>=COLS||y>=ROWS)return;
+  const cost=SHOP[curTool]||0;
+  if(coins<cost){showNotif(`Need 🪙${cost}`);return;}
+  if(grid[gk(x,y)])return;
+  coins-=cost;
+  grid[gk(x,y)]={type:curTool,dir:curDir,data:{progress:0,ore:null,upgSpd:0,upgLck:0,upgYld:0,targetOre:null,buffer:[],stored:[]}};
+  updateStats();draw();
+}
+// ── Ghost button actions — use both pointer and touch ──
+function addBtnListeners(el, fn){
+  el.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn();});
+}
+addBtnListeners(_gbOk,()=>{
+  if(_gbOk.classList.contains('disabled'))return;
+  placeCurrent(hoverX,hoverY);
+});
+addBtnListeners(_gbCancel,()=>selTool('pointer'));
+addBtnListeners(_gbRot,()=>{
+  const dirs=['N','E','S','W'];
+  setDir(dirs[(dirs.indexOf(curDir)+1)%4]);
+});
+
+// ── Canvas interactions — unified pointer events ──
+let ptId=null; // active pointer id for pan/tap tracking
+
+canvas.addEventListener('pointermove',e=>{
+  if(ptId!==null&&e.pointerId!==ptId)return;
+  const dx=e.clientX-pStart.x,dy=e.clientY-pStart.y,dist=Math.sqrt(dx*dx+dy*dy);
+  if(!isPan&&dist>8)isPan=true;
+  if(isPan){
+    panX=Math.max(-COLS*CELL*.55,Math.min(COLS*CELL*.55,pOrigin.x+e.clientX-pStart.x));
+    panY=Math.max(-ROWS*CELL*.55,Math.min(ROWS*CELL*.55,pOrigin.y+e.clientY-pStart.y));
+    draw();
+  } else {
+    // update hover for ghost
+    const[x,y]=s2g(e.clientX,e.clientY);
+    hoverX=x;hoverY=y;
+    if(curTool==='pointer')handleHover(e);
+  }
+});
+
+canvas.addEventListener('pointerdown',e=>{
+  if(e.button!==undefined&&e.button!==0)return;
+  ptId=e.pointerId;
+  canvas.setPointerCapture(e.pointerId);
+  isPan=false;
+  pStart={x:e.clientX,y:e.clientY};
+  pOrigin={x:panX,y:panY};
+  // Update hover immediately on tap
+  const[x,y]=s2g(e.clientX,e.clientY);
+  hoverX=x;hoverY=y;
+});
+
+canvas.addEventListener('pointerup',e=>{
+  if(e.pointerId!==ptId)return;
+  ptId=null;
+  if(!isPan){
+    const[x,y]=s2g(e.clientX,e.clientY);
+    if(curTool==='pointer'){
+      const cell=gc2(x,y);if(!cell)return;
+      if(cell.type==='miner')openUpgModal(x,y,cell);
+      else if(cell.type==='targetminer'||cell.type==='extractor')openOrePicker(x,y,cell);
+      else if(cell.type==='storage')openStorageMod(x,y,cell);
+      else if(cell.type==='forge')showNotif(`⚗ Forge buffer: ${(cell.data?.buffer||[]).length}/3`);
+    } else if(curTool==='erase'){
+      handlePlace(e.clientX,e.clientY);
+    }
+    // placement mode: show ghost at tapped cell, buttons handle the rest
+  }
+  isPan=false;
+});
+
+canvas.addEventListener('pointerleave',e=>{
+  if(e.pointerId!==ptId){
+    // Mouse left without active touch — hide tip only, keep ghost if tool active
+    document.getElementById('tip').style.display='none';
+    if(curTool==='pointer'){hoverX=-1;hoverY=-1;hideGhostBtns();}
+  }
+});
+
+canvas.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  const[x,y]=s2g(e.clientX,e.clientY);
+  const c=gc2(x,y);if(!c)return;
+  const ord=['N','E','S','W'];c.dir=ord[(ord.indexOf(c.dir)+1)%4];draw();
+});
+function handlePlace(mx,my){
+  const[x,y]=s2g(mx,my);if(x<0||y<0||x>=COLS||y>=ROWS)return;
+  if(curTool==='erase'){delete grid[gk(x,y)];draw();updateStats();return;}
+  if(curTool==='pointer')return;
+  const cost=SHOP[curTool]||0;if(coins<cost){showNotif(`Need 🪙${cost}`);return;}
+  if(grid[gk(x,y)])return;
+  coins-=cost;
+  grid[gk(x,y)]={type:curTool,dir:curDir,data:{progress:0,ore:null,upgSpd:0,upgLck:0,upgYld:0,targetOre:null,buffer:[],stored:[]}};
+  updateStats();draw();
+}
+function handleHover(e){
+  const[x,y]=s2g(e.clientX,e.clientY);
+  hoverX=x;hoverY=y;
+  const cell=gc2(x,y);const tip=document.getElementById('tip');
+  // In placement/erase mode just track position, no tooltip
+  if(curTool!=='pointer'){tip.style.display='none';return;}
+  if(!cell){tip.style.display='none';return;}
+  tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-14)+'px';
+  function set3(n,nc,r,rc2,d){document.getElementById('tipN').textContent=n;document.getElementById('tipN').style.color=nc;document.getElementById('tipR').textContent=r;document.getElementById('tipR').style.color=rc2;document.getElementById('tipD').textContent=d;}
+  if(curTool==='pointer'){
+    if(cell.type==='miner'){const{upgSpd:s=0,upgLck:l=0,upgYld:y2=0}=cell.data||{};set3('⛏ Miner','var(--gold2)',`SPD ${s} · LUCK ${l} · YLD ${y2}`,'var(--gold)','Click to upgrade');return;}
+    if(cell.type==='targetminer'){const t=cell.data?.targetOre?ORES.find(o=>o.id===cell.data.targetOre)?.name:'Not set';set3('🎯 Target Miner','var(--gold2)',`Target: ${t}`,'var(--gold)','Click to set target');return;}
+    if(cell.type==='extractor'){const t=cell.data?.targetOre?ORES.find(o=>o.id===cell.data.targetOre)?.name:'Not set';set3('🧲 Extractor','var(--gold2)',`Target: ${t}`,'var(--gold)','Click to set target');return;}
+    if(cell.type==='storage'){const cnt=(cell.data?.stored||[]).length;set3('📦 Storage','var(--gold2)',`${cnt}/30 stored`,'var(--gold)','Click to inspect');return;}
+    if(cell.type==='forge'){const cnt=(cell.data?.buffer||[]).length;set3('⚗ Forge','#f05050',`Buffer: ${cnt}/3`,'#f07050','3 ores → 1 ore +3 tiers');return;}
+  }
+  const item=items.find(i=>i.x===x&&i.y===y);const ore=item?.ore||(cell.type==='miner'?cell.data?.ore:null);
+  if(ore){
+    const v=item?.val??ore.val;
+    const szl=item?.size&&item.size.id!=='normal'?` · ${item.size.label}`:'';
+    set3(ore.name,RC[ore.rar]||'#fff',ore.rar+(szl),RC[ore.rar]||'#fff',`${v}🪙 · T${ore.tier}`);return;
+  }
+  const names={miner:'Miner',conveyor:'Conveyor',chest:'Trash',furnace:'Furnace',sorter:'Sorter',crusher:'Crusher',vault:'Vault',refinery:'Refinery',forge:'Forge',targetminer:'Target Miner',storage:'Storage',extractor:'Extractor',merger:'Merger'};
+  set3(names[cell.type]||cell.type,'var(--text)','','',`Dir: ${DA[cell.dir]}`);
+}
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.key==='r'||e.key==='R'){const o=['N','E','S','W'];setDir(o[(o.indexOf(curDir)+1)%4]);}
+  if(e.key==='Delete'||e.key==='Backspace')selTool('erase');
+  if(e.key==='Escape'){['uMod','almMod','guideMod','orePicker','storageMod','hamburgerMod','changelogMod'].forEach(id=>document.getElementById(id).classList.remove('open'));document.getElementById('infoPanel').classList.remove('open');document.getElementById('bt3').classList.remove('active');selTool('pointer');}
+  if(e.key==='1')switchBot(0);
+  if(e.key==='2')switchBot(1);
+  if(e.key==='4')toggleInfo();
+});
+const UPGS=[
+  {id:'upgSpd',icon:'⚡',name:'Mining Speed',desc:'Reduces ticks between spawns.',maxLv:4,costFn:lv=>[60,250,800,2500][lv],effDesc:lv=>`Every ${Math.max(2,MBASE-lv)} ticks`},
+  {id:'upgLck',icon:'🍀',name:'Ore Luck',desc:'Slightly boosts rare+ ore chance.',maxLv:5,costFn:lv=>[80,320,1000,3000,8000][lv],effDesc:lv=>lv===0?'No bonus':`Rare+ +${lv*6}%`},
+  {id:'upgYld',icon:'⛏',name:'Dual Strike',desc:'Small chance to drop bonus ore.',maxLv:3,costFn:lv=>[150,700,3000][lv],effDesc:lv=>lv===0?'Inactive':`${lv*8}% bonus ore`},
+];
+function openUpgModal(gx,gy,cell){
+  activeUpgKey=gk(gx,gy);
+  const w=document.getElementById('uModTex');w.innerHTML='';
+  const c=MTex['miner'].cloneNode(true);c.style.cssText='width:100%;height:100%;image-rendering:pixelated;display:block;';w.appendChild(c);
+  refreshUpg(cell);document.getElementById('uMod').classList.add('open');
+}
+function refreshUpg(cell){
+  if(!cell)cell=grid[activeUpgKey];if(!cell)return;
+  document.getElementById('uModName').textContent=`Miner @ ${activeUpgKey}`;
+  document.getElementById('uLvSpd').textContent=cell.data.upgSpd||0;
+  document.getElementById('uLvLck').textContent=cell.data.upgLck||0;
+  document.getElementById('uLvYld').textContent=cell.data.upgYld||0;
+  document.getElementById('uModBal').textContent=fmtN(coins)+'🪙';
+  const list=document.getElementById('upgList');list.innerHTML='';
+  UPGS.forEach(upg=>{
+    const lv=cell.data[upg.id]||0;const maxed=lv>=upg.maxLv;const cost=maxed?0:upg.costFn(lv);const afford=coins>=cost;
+    const row=document.createElement('div');row.className='upgrow';
+    row.innerHTML=`<div class="uico">${upg.icon}</div><div class="uinfo"><div class="unm">${upg.name}</div><div class="udsc">${upg.desc}</div><div class="ulv">${upg.effDesc(lv)}${maxed?'':' → '+upg.effDesc(lv+1)}</div>${!maxed?`<div class="ucst ${afford?'can':'cant'}">${afford?'✓':'✗'} ${fmtN(cost)}🪙</div>`:''}</div><button class="ubtn" ${maxed||!afford?'disabled':''} onclick="doUpg('${upg.id}')">${maxed?'MAX':'LV'+(lv+1)}</button>`;
+    list.appendChild(row);
+  });
+}
+function doUpg(id){const cell=grid[activeUpgKey];if(!cell)return;const upg=UPGS.find(u=>u.id===id);if(!upg)return;const lv=cell.data[id]||0;if(lv>=upg.maxLv)return;const cost=upg.costFn(lv);if(coins<cost)return;coins-=cost;cell.data[id]=lv+1;addLog(`${upg.name} Lv${lv+1}`,'good');refreshUpg(cell);updateStats();}
+function closeUpgModal(){document.getElementById('uMod').classList.remove('open');activeUpgKey=null;}
+document.getElementById('uMod').addEventListener('click',e=>{if(e.target===document.getElementById('uMod'))closeUpgModal();});
+function openOrePicker(gx,gy,cell){
+  orePickerKey=gk(gx,gy);
+  document.getElementById('orePickerTitle').textContent=cell.type==='extractor'?'EXTRACTOR TARGET':'MINER TARGET';
+  const g=document.getElementById('opkGrid');g.innerHTML='';
+  ORES.forEach(ore=>{
+    const found=discovered.has(ore.id);
+    const btn=document.createElement('div');btn.className='opk-slot '+(found?'found':'locked');
+    if(found&&cell.data?.targetOre===ore.id)btn.classList.add('selected');
+    const tw=document.createElement('div');tw.style.cssText='width:34px;height:34px;border-radius:3px;overflow:hidden;margin:0 auto;';
+    if(found){const cv=TC[ore.id].cloneNode(true);cv.style.cssText='width:100%;height:100%;image-rendering:pixelated;display:block;';tw.appendChild(cv);}
+    else{tw.style.cssText+='background:#080604;display:flex;align-items:center;justify-content:center;color:#1a1208;';tw.textContent='?';}
+    const nm=document.createElement('div');nm.className='opk-name';nm.style.color=found?RC[ore.rar]:'#2a2010';nm.textContent=found?ore.name:'???';
+    btn.appendChild(tw);btn.appendChild(nm);
+    if(found)btn.onclick=()=>{const c=grid[orePickerKey];if(c){c.data.targetOre=ore.id;addLog(`Target: ${ore.name}`,ore.tier>=7?'good':'');}closeOrePicker();};
+    g.appendChild(btn);
+  });
+  document.getElementById('orePicker').classList.add('open');
+}
+function closeOrePicker(){document.getElementById('orePicker').classList.remove('open');orePickerKey=null;}
+document.getElementById('orePicker').addEventListener('click',e=>{if(e.target===document.getElementById('orePicker'))closeOrePicker();});
+function openStorageMod(gx,gy,cell){storageKey=gk(gx,gy);refreshStorageMod(cell);document.getElementById('storageMod').classList.add('open');}
+function refreshStorageMod(cell){
+  if(!cell)cell=grid[storageKey];if(!cell)return;
+  const stored=cell.data?.stored||[];document.getElementById('storageInfo').textContent=`${stored.length} / 30 ores`;
+  const sg=document.getElementById('sgGrid');sg.innerHTML='';
+  if(!stored.length){sg.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--dim);font-size:.72rem;padding:14px">Empty</div>';return;}
+  stored.forEach(entry=>{
+    const ore=entry.ore||entry; // backward compat if entry is bare ore
+    const val=entry.val??ore.val;
+    const sz=entry.size;
+    const slot=document.createElement('div');slot.className='sg-slot';
+    slot.style.borderColor=sz?.id==='titanic'?sz.col:ha(RC[ore.rar]||'#fff',.4);
+    const cv=TC[ore.id].cloneNode(true);cv.style.cssText='width:100%;display:block;image-rendering:pixelated;';slot.appendChild(cv);
+    const cnt=document.createElement('div');cnt.className='sg-cnt';cnt.textContent=val+'🪙';slot.appendChild(cnt);
+    if(sz&&sz.id!=='normal'){const sl=document.createElement('div');sl.style.cssText=`position:absolute;top:1px;left:2px;font-family:Cinzel,serif;font-size:.36rem;color:${sz.col};`;sl.textContent=sz.label.slice(0,3).toUpperCase();slot.appendChild(sl);}
+    slot.title=`${ore.name}${sz?` [${sz.label}]`:''} · ${val}🪙`;sg.appendChild(slot);
+  });
+}
+function emptyStorage(){const cell=grid[storageKey];if(!cell)return;cell.data.stored=[];refreshStorageMod(cell);}
+function closeStorageMod(){document.getElementById('storageMod').classList.remove('open');storageKey=null;}
+document.getElementById('storageMod').addEventListener('click',e=>{if(e.target===document.getElementById('storageMod'))closeStorageMod();});
+let almTabV=0;
+function openAlmanac(){buildAlm();document.getElementById('almMod').classList.add('open');}
+function closeAlmanac(){document.getElementById('almMod').classList.remove('open');}
+document.getElementById('almMod').addEventListener('click',e=>{if(e.target===document.getElementById('almMod'))closeAlmanac();});
+function almSwitch(t){almTabV=t;[0,1,2].forEach(i=>document.getElementById('at'+i).classList.toggle('active',i===t));buildAlm();}
+function buildAlm(){
+  const body=document.getElementById('almBody');body.innerHTML='';
+  if(almTabV===2){['COMMON','UNCOMMON','RARE','EPIC','LEGENDARY','MYTHIC'].forEach(rar=>{const grp=ORES.filter(o=>o.rar===rar);if(!grp.length)return;const t=document.createElement('div');t.className='agrptit';t.style.color=RC[rar];t.textContent=rar;body.appendChild(t);grp.forEach(o=>body.appendChild(mkAlmCard(o)));});return;}
+  let ores=[...ORES];if(almTabV===1)ores=ores.filter(o=>discovered.has(o.id));
+  ores.forEach(o=>body.appendChild(mkAlmCard(o)));
+}
+function mkAlmCard(ore){
+  const found=discovered.has(ore.id);const pct=ore.w/TW*100;const ps=pct<.1?pct.toFixed(3)+'%':pct<1?pct.toFixed(2)+'%':pct.toFixed(1)+'%';const rc=RC[ore.rar]||'#fff';
+  const card=document.createElement('div');card.className='acard'+(found?'':' locked');
+  const tw=document.createElement('div');tw.className='atex';
+  if(found){const c=TC[ore.id].cloneNode(true);c.style.cssText='width:100%;height:100%;image-rendering:pixelated;display:block;';tw.appendChild(c);}
+  else{tw.style.cssText='background:#070503;display:flex;align-items:center;justify-content:center;color:#1a1208;font-size:.85rem;';tw.textContent='?';}
+  card.innerHTML=`<div class="atex"></div><div class="amain"><div class="anm" style="color:${found?rc:'#251c10'}">${found?ore.name:'???'}</div><div class="asub">${found?`Tier ${ore.tier} · ${ore.rar} · Base ${ore.val}🪙`:ore.rar}</div>${found?`<div class="abar"><div class="afill" style="width:${Math.min(100,pct*7)}%;background:${rc}"></div></div>`:''}</div><div class="aright"><div class="apct" style="color:${found?rc:'#251c10'}">${found?ps:'??%'}</div><div class="aval" style="color:var(--dim);font-size:.52rem">${found?'Tiny·Sm·Nm·Big·Hg·Titan':''}</div></div>`;
+  card.querySelector('.atex').replaceWith(tw);return card;
+}
+const GUIDES={
+  miner:{name:'Miner',cost:10,desc:'Spawns a random ore every few ticks and pushes it in its arrow direction. Upgrade it (Pointer mode) for faster speed, better luck, and bonus yields.',tags:[{label:'OUTPUT: Random ore',cls:'out'},{label:'Upgradeable',cls:'fx'}],pipeline:['<b>Miner</b> → Conveyor → Vault','Weighted random ore each cycle','Click in Pointer mode to upgrade'],tip:'Always place a Conveyor in the direction the arrow faces — ore dropped into empty rock is lost!'},
+  conveyor:{name:'Conveyor',cost:3,desc:'Passes ore from tile to tile in its arrow direction. The essential building block of every belt line.',tags:[{label:'PASSES: Ore',cls:'out'},{label:'Directional',cls:'in'}],pipeline:['Miner → <b>Conveyor</b> → Conveyor → Vault','Chain as many as needed'],tip:'Press [R] to cycle direction before placing, or right-click a placed tile to rotate it.'},
+  chest:{name:'Trash',cost:5,desc:'Permanently destroys any ore that enters it. Use as a junk drain at the end of overflow lanes.',tags:[{label:'ABSORBS: Ore',cls:'in'},{label:'Destroys permanently',cls:'fx'}],pipeline:['Sorter → junk lane → <b>Trash</b>','Keeps belts from clogging'],tip:'Pair with a Sorter — route cheap ore to Trash and rare ore to the Furnace.'},
+  furnace:{name:'Furnace',cost:25,desc:'Doubles the coin value of any ore passing through, marking it ✦. Effect applies only once per ore.',tags:[{label:'INPUT: Any ore',cls:'in'},{label:'2x value',cls:'fx'},{label:'OUTPUT: Smelted ore',cls:'out'}],pipeline:['Miner → <b>Furnace</b> → Vault','5🪙 ore becomes 10🪙'],tip:'Place the Furnace BEFORE the Crusher — duplicated ores will already be at 2x value.'},
+  sorter:{name:'Sorter',cost:30,desc:'Ore Tier 10+ (Sapphire and above) turns 90° to the right. All lower-tier ore continues straight through.',tags:[{label:'LOW TIER: straight',cls:'out'},{label:'TIER 10+: right turn',cls:'fx'}],pipeline:['Conveyor → <b>Sorter</b> → Vault (common)','                     ↓ right','                Furnace → Vault (rare)'],tip:'"Right" is relative to the arrow. Facing East (→)? Tier 10+ exits South (↓).'},
+  crusher:{name:'Crusher',cost:50,desc:'25% chance to duplicate any ore passing through. Both copies continue onward.',tags:[{label:'INPUT: Any ore',cls:'in'},{label:'25% duplicate',cls:'fx'}],pipeline:['Furnace → <b>Crusher</b> → Vault','1-in-4: 2 smelted ores instead of 1'],tip:'Always put Crusher AFTER the Furnace so duplicates are already at 2x value.'},
+  vault:{name:'Vault',cost:20,desc:'Converts incoming ore to its coin value and adds it to your balance. Logs every deposit.',tags:[{label:'INPUT: Any ore',cls:'in'},{label:'OUTPUT: Coins',cls:'out'}],pipeline:['Miner → Conveyor → <b>Vault</b>'],tip:'You need at least one Vault — ore with nowhere to go simply disappears.'},
+  refinery:{name:'Refinery',cost:35,desc:'Upgrades any ore one tier higher before passing it along. Chain multiples to climb several tiers.',tags:[{label:'INPUT: Any ore',cls:'in'},{label:'OUTPUT: +1 tier',cls:'out'}],pipeline:['Miner(Coal T1) → <b>Refinery</b> → Vault','Coal becomes Iron Ore automatically','Chain 3: Coal→Iron→Copper→Tin'],tip:'Use a Sorter to divert only common ores through the Refinery — don\'t waste it on already-rare ore!'},
+  forge:{name:'Forge',cost:60,desc:'Collects 3 ores, fuses them into one ore 3 tiers above the first input. Watch the 0/3 counter on the tile.',tags:[{label:'INPUT: 3 ores',cls:'in'},{label:'OUTPUT: +3 tiers',cls:'out'},{label:'Consumes inputs',cls:'fx'}],pipeline:['3x Iron(T2) → <b>Forge</b> → Gold(T5)','3x Gold(T6) → Amethyst(T9)'],tip:'Feed with a Target Miner set to one ore type for predictable, scheduled upgrades.'},
+  targetminer:{name:'Target Miner',cost:40,desc:'Mines only the specific ore you choose. Click in Pointer mode to pick from your discovered ores. Slower (10 ticks) but guaranteed output.',tags:[{label:'OUTPUT: Chosen ore',cls:'out'},{label:'10 tick rate',cls:'fx'}],pipeline:['Pointer 🖱 → click → choose ore','Outputs chosen ore every 10 ticks'],tip:'Set 3 Target Miners to the same ore and route all 3 into a Forge for reliable tier upgrades.'},
+  storage:{name:'Storage',cost:15,desc:'Holds up to 30 ores without destroying them. Ores do NOT auto-exit — use an Extractor to pull them out. Click in Pointer mode to inspect contents.',tags:[{label:'INPUT: Any ore',cls:'in'},{label:'Holds 30',cls:'fx'},{label:'No auto-output',cls:'fx'}],pipeline:['Fast belt → <b>Storage</b>','Extractor (behind) → belt'],tip:'Great buffer between a fast Miner and slow Forge. Overflow piles up here safely.'},
+  extractor:{name:'Extractor',cost:25,desc:'Pulls target ore from Storage directly behind it every 4 ticks, outputs in its arrow direction. Click in Pointer mode to set target ore.',tags:[{label:'INPUT: Storage behind',cls:'in'},{label:'OUTPUT: Target ore',cls:'out'},{label:'Every 4 ticks',cls:'fx'}],pipeline:['[Storage] ← <b>Extractor →</b> belt','Arrow = output · back = Storage side'],tip:'Arrow points OUT. Storage must be on the OPPOSITE side. Extractor facing East → Storage to its West.'},
+  merger:{name:'Merger',cost:20,desc:'Accepts ore from any direction and outputs it in its single facing direction. Combines multiple belt lines into one.',tags:[{label:'INPUT: Any dir',cls:'in'},{label:'OUTPUT: Facing dir',cls:'out'}],pipeline:['Belt A ↓  +  Belt B →','     → <b>Merger →</b> Furnace'],tip:'Use Mergers to funnel multiple Miners into one Furnace without crossing belts.'},
+};
+function openGuide(type){
+  const g=GUIDES[type];if(!g)return;
+  document.getElementById('guideMTitle').textContent='📖 '+g.name.toUpperCase();
+  document.getElementById('guideName').textContent=g.name;document.getElementById('guideBadge').textContent=`🪙${g.cost}`;
+  const w=document.getElementById('guideTexWrap');w.innerHTML='';
+  const c=MTex[type]?.cloneNode(true);if(c){c.style.cssText='width:100%;height:100%;image-rendering:pixelated;display:block;';w.appendChild(c);}
+  const body=document.getElementById('guideBody');body.innerHTML='';
+  const ds=document.createElement('div');ds.innerHTML=`<div class="guide-sec-title">What it does</div><div class="guide-desc">${g.desc}</div>`;
+  if(g.tags?.length){const tg=document.createElement('div');tg.className='guide-tags';g.tags.forEach(t=>{const s=document.createElement('span');s.className=`guide-tag ${t.cls}`;s.textContent=t.label;tg.appendChild(s);});ds.appendChild(tg);}
+  body.appendChild(ds);
+  const ps=document.createElement('div');ps.innerHTML=`<div class="guide-sec-title">Example</div><div class="guide-pipeline">${g.pipeline.map(l=>`<div>${l}</div>`).join('')}</div>`;body.appendChild(ps);
+  const ts=document.createElement('div');ts.innerHTML=`<div class="guide-sec-title">Pro Tip</div><div class="guide-tip">${g.tip}</div>`;body.appendChild(ts);
+  document.getElementById('guideMod').classList.add('open');
+}
+function closeGuide(){document.getElementById('guideMod').classList.remove('open');}
+document.getElementById('guideMod').addEventListener('click',e=>{if(e.target===document.getElementById('guideMod'))closeGuide();});
+let infoTab=0,infoOpen=false;
+function switchBot(t){[0,1].forEach(i=>{document.getElementById('bs'+i).classList.toggle('active',i===t);document.getElementById('bt'+i).classList.toggle('active',i===t);});}
+function toggleInfo(){infoOpen=!infoOpen;document.getElementById('infoPanel').classList.toggle('open',infoOpen);document.getElementById('bt3').classList.toggle('active',infoOpen);if(infoOpen)renderInfoContent();}
+function switchInfo(t){infoTab=t;[0,1,2,3].forEach(i=>document.getElementById('it'+i).classList.toggle('active',i===t));renderInfoContent();}
+function renderInfoContent(){
+  const el=document.getElementById('infoContent');el.innerHTML='';
+  if(infoTab===0){
+    if(!inventory.length){el.innerHTML='<div style="color:var(--dim);font-family:Cinzel,serif;font-size:.62rem">No ores banked yet — place a Vault!</div>';return;}
+    const strip=document.createElement('div');strip.className='inv-strip';
+    inventory.forEach(({ore,val,size})=>{
+      const slot=document.createElement('div');slot.className='islot';
+      slot.style.borderColor=size?.id==='titanic'?size.col:ha(RC[ore.rar]||'#fff',.42);
+      const cv=TC[ore.id].cloneNode(true);cv.style.cssText='width:100%;display:block;image-rendering:pixelated;';slot.appendChild(cv);
+      const cnt=document.createElement('div');cnt.className='icnt';cnt.textContent=val+'🪙';slot.appendChild(cnt);
+      const nm=document.createElement('div');nm.className='iname';nm.style.color=RC[ore.rar]||'#fff';nm.textContent=ore.name.slice(0,5);slot.appendChild(nm);
+      if(size&&size.id!=='normal'){const sl=document.createElement('div');sl.style.cssText=`position:absolute;top:1px;right:2px;font-family:Cinzel,serif;font-size:.38rem;color:${size.col};`;sl.textContent=size.label.slice(0,3).toUpperCase();slot.appendChild(sl);}
+      slot.title=`${ore.name}${size?` [${size.label}]`:''} · ${val}🪙`;strip.appendChild(slot);
+    });
+    el.appendChild(strip);
+  } else if(infoTab===1){
+    const strip=document.createElement('div');strip.className='codex-strip';
+    ORES.forEach(ore=>{
+      const found=discovered.has(ore.id);const slot=document.createElement('div');slot.className='cx-slot'+(found?' found':'');
+      const cv=TC[ore.id].cloneNode(true);cv.style.cssText='width:30px;height:30px;image-rendering:pixelated;display:block;';slot.appendChild(cv);
+      const nm=document.createElement('div');nm.className='cx-name';nm.textContent=found?ore.name:'???';
+      const rr=document.createElement('div');rr.className='cx-rar';rr.style.color=RC[ore.rar];rr.textContent=ore.rar.slice(0,3);
+      slot.appendChild(nm);slot.appendChild(rr);
+      if(found)slot.title=`${ore.name} · T${ore.tier} · ${(ore.w/TW*100).toFixed(2)}% · ${ore.val}🪙`;
+      strip.appendChild(slot);
+    });
+    el.appendChild(strip);
+  } else if(infoTab===2){
+    const strip=document.createElement('div');strip.className='stats-strip';
+    let best=null;for(const id of discovered){const o=ORES.find(x=>x.id===id);if(!best||o.tier>best.tier)best=o;}
+    const stats=[['Coins',fmtN(coins)+'🪙'],['Earned',fmtN(totalEarned)+'🪙'],['Banked',banked],['Machines',Object.keys(grid).length],['Live Items',items.length],['Discovered',discovered.size+'/20'],['Tick',tick],['Depth',Math.floor(tick/10)+'m']];
+    if(best)stats.push(['Rarest',best.name]);
+    stats.forEach(([k,v])=>{const d=document.createElement('div');d.className='st-item';d.innerHTML=`<div class="st-k">${k}</div><div class="st-v" style="${best&&k==='Rarest'?'color:'+RC[best.rar]:''}">${v}</div>`;strip.appendChild(d);});
+    // Size odds breakdown
+    const sdiv=document.createElement('div');sdiv.style.cssText='width:100%;border-top:1px solid var(--border);padding-top:4px;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;';
+    const slbl=document.createElement('div');slbl.style.cssText='font-family:Cinzel,serif;font-size:.42rem;letter-spacing:2px;color:var(--dim);flex-shrink:0;';slbl.textContent='SIZES:';sdiv.appendChild(slbl);
+    SIZES.forEach(sz=>{const pct=(sz.w/SW*100).toFixed(1);const d2=document.createElement('div');d2.style.cssText=`font-family:Cinzel,serif;font-size:.44rem;color:${sz.col};`;d2.textContent=`${sz.label} ${pct}% ×${sz.mul}`;sdiv.appendChild(d2);});
+    strip.appendChild(sdiv);
+    el.appendChild(strip);
+  } else {
+    const strip=document.createElement('div');strip.className='log-strip';
+    strip.innerHTML=logs.slice(0,12).map(l=>`<div class="ll ${l.type}">[${l.tick}] ${l.msg}</div>`).join('');
+    el.appendChild(strip);
+  }
+}
+function updateStats(){
+  document.getElementById('coinAmt').textContent=fmtN(coins);
+  MT.forEach(t=>{const btn=document.querySelector(`.mslot[data-tool="${t}"]`);if(btn)btn.classList.toggle('disabled',coins<(SHOP[t]||0));});
+  if(activeUpgKey&&grid[activeUpgKey])refreshUpg(grid[activeUpgKey]);
+  if(infoOpen&&infoTab===2)renderInfoContent();
+}
+function fmtN(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.floor(n).toString();}
+function addLog(msg,type=''){logs.unshift({msg,type,tick});if(logs.length>100)logs.pop();if(infoOpen&&infoTab===3)renderInfoContent();}
+function showNotif(msg){clearTimeout(notifT);const el=document.getElementById('notif');el.textContent=msg;el.classList.add('show');notifT=setTimeout(()=>el.classList.remove('show'),2500);}
+// Build machine row for tab 1
+const MACH_DEF=[
+  {type:'miner',name:'Miner',sub:'Random ore'},
+  {type:'conveyor',name:'Conveyor',sub:'Moves ore'},
+  {type:'vault',name:'Vault',sub:'Ore→coins'},
+  {type:'chest',name:'Trash',sub:'Destroys'},
+  null, // divider
+  {type:'furnace',name:'Furnace',sub:'2x value'},
+  {type:'refinery',name:'Refinery',sub:'+1 tier'},
+  {type:'forge',name:'Forge',sub:'3→+3 tier'},
+  {type:'crusher',name:'Crusher',sub:'25% dupe'},
+  null,
+  {type:'sorter',name:'Sorter',sub:'T10+ right'},
+  {type:'merger',name:'Merger',sub:'2 belts→1'},
+  {type:'targetminer',name:'T.Miner',sub:'Set ore'},
+  {type:'storage',name:'Storage',sub:'30 ores'},
+  {type:'extractor',name:'Extractor',sub:'Pull out'},
+];
+(function buildMachRow(){
+  const row=document.getElementById('machRow');
+  MACH_DEF.forEach(m=>{
+    if(!m){const d=document.createElement('div');d.className='msec-div';row.appendChild(d);return;}
+    const slot=document.createElement('div');slot.className='mslot';slot.dataset.tool=m.type;
+    slot.onclick=()=>{if(!slot.classList.contains('disabled'))selTool(m.type);};
+    const tic=document.createElement('div');tic.className='mtic';
+    const cv=MTex[m.type]?.cloneNode(true);if(cv){cv.style.cssText='width:100%;height:100%;image-rendering:pixelated;display:block;';tic.appendChild(cv);}
+    const nm=document.createElement('div');nm.className='mname';nm.textContent=m.name;
+    const cost=document.createElement('div');cost.className='mcost';cost.textContent='🪙'+SHOP[m.type];
+    const qb=document.createElement('button');qb.className='mq';qb.textContent='?';
+    qb.onclick=e=>{e.stopPropagation();openGuide(m.type);};
+    slot.appendChild(qb);slot.appendChild(tic);slot.appendChild(nm);slot.appendChild(cost);
+    row.appendChild(slot);
+  });
+})();
+
+// =================== SAVE / LOAD ===================
+const SAVE_KEY='mineworks_save';
+function saveGame(){
+  try{
+    const savedGrid={};
+    for(const[k,v]of Object.entries(grid)){
+      try{
+        savedGrid[k]={type:v.type,dir:v.dir,data:{
+          progress:v.data.progress||0,
+          upgSpd:v.data.upgSpd||0,upgLck:v.data.upgLck||0,upgYld:v.data.upgYld||0,
+          targetOre:v.data.targetOre||null,
+          buffer:(v.data.buffer||[]).map(o=>o?.id||null).filter(Boolean),
+          stored:(v.data.stored||[]).map(e=>{
+            const ore=e.ore||e;
+            return{oreId:ore?.id||'stone',val:e.val||ore?.val||1,sizeId:e.size?.id||'normal'};
+          }),
+        }};
+      }catch(err){/* skip bad cell */}
+    }
+    const savedInv=[];
+    for(const e of inventory){
+      try{savedInv.push({oreId:e.ore.id,val:e.val||e.ore.val,sizeId:e.size?.id||'normal',processed:!!e.processed});}
+      catch(err){/* skip */}
+    }
+    const state={
+      grid:savedGrid,coins,totalEarned,banked,tick,
+      discovered:[...discovered],
+      inventory:savedInv,
+      logs:logs.slice(0,30),
+      savedAt:Date.now(),
+    };
+    localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+    showNotif('💾 Game saved!');
+    addLog('Game saved.','good');
+    updateSaveInfo();
+  }catch(e){console.error('Save error',e);showNotif('❌ Save failed!');}
+}
+function loadGame(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw)return false;
+    const state=JSON.parse(raw);
+    if(!state||typeof state!=='object')return false;
+    grid={};
+    for(const[k,v]of Object.entries(state.grid||{})){
+      try{
+        grid[k]={type:v.type,dir:v.dir,data:{
+          progress:v.data.progress||0,
+          upgSpd:v.data.upgSpd||0,upgLck:v.data.upgLck||0,upgYld:v.data.upgYld||0,
+          targetOre:v.data.targetOre||null,
+          buffer:(v.data.buffer||[]).map(id=>ORES.find(o=>o.id===id)||ORES[0]),
+          stored:(v.data.stored||[]).map(e=>{
+            const ore=ORES.find(o=>o.id===e.oreId)||ORES[0];
+            const size=SIZES.find(s=>s.id===e.sizeId)||SIZES[2];
+            return{ore,val:e.val??Math.round(ore.val*size.mul),size};
+          }),
+          ore:null,
+        }};
+      }catch(err){/* skip bad cell */}
+    }
+    items=[];
+    coins=Number(state.coins)||50;
+    totalEarned=Number(state.totalEarned)||0;
+    banked=Number(state.banked)||0;
+    tick=Number(state.tick)||0;
+    discovered=new Set(Array.isArray(state.discovered)?state.discovered:[]);
+    inventory=[];
+    for(const e of(state.inventory||[])){
+      try{
+        const ore=ORES.find(o=>o.id===e.oreId)||ORES[0];
+        const size=SIZES.find(s=>s.id===e.sizeId)||SIZES[2];
+        inventory.push({ore,val:e.val??ore.val,size,processed:!!e.processed});
+      }catch(err){/* skip */}
+    }
+    logs=Array.isArray(state.logs)?state.logs:[];
+    updateStats();
+    if(infoOpen)renderInfoContent();
+    return true;
+  }catch(e){console.error('Load error',e);return false;}
+}
+function hasSave(){
+  try{const raw=localStorage.getItem(SAVE_KEY);return!!(raw&&JSON.parse(raw)?.savedAt);}
+  catch{return false;}
+}
+function getSaveDate(){
+  try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));return s?.savedAt?new Date(s.savedAt).toLocaleString():null;}
+  catch{return null;}
+}
+function updateSaveInfo(){
+  const d=getSaveDate();
+  const el=document.getElementById('hambSaveInfo');
+  if(el)el.textContent=d?`Last save: ${d}`:'No save';
+}
+// =================== HOME SCREEN ===================
+function openHome(){
+  pauseSim();
+  document.getElementById('homeContinueBtn').style.display=hasSave()?'block':'none';
+  document.getElementById('homeMod').classList.add('open');
+}
+function closeHome(){document.getElementById('homeMod').classList.remove('open');}
+function homeContinue(){
+  // wipe current state first so partial loads don't leave corruption
+  grid={};items=[];coins=50;totalEarned=0;banked=0;tick=0;
+  discovered=new Set();inventory=[];logs=[];
+  if(loadGame()){
+    closeHome();
+    addLog('Save loaded — mining resumed!','good');
+    showNotif('✅ Loaded!');
+    startSim();
+  } else {
+    // restore defaults if load fails
+    updateStats();
+    showNotif('❌ Load failed — save may be corrupt');
+  }
+}
+// ── Custom confirm (mobile-safe, no browser confirm()) ──
+let _confirmCb=null;
+function confirmDo(msg,cb){
+  _confirmCb=cb;
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmMod').classList.add('open');
+}
+function confirmYes(){
+  document.getElementById('confirmMod').classList.remove('open');
+  if(_confirmCb){_confirmCb();_confirmCb=null;}
+}
+function confirmNo(){
+  document.getElementById('confirmMod').classList.remove('open');
+  _confirmCb=null;
+}
+function homeNewGame(){
+  const doIt=()=>{
+    grid={};items=[];coins=50;totalEarned=0;banked=0;tick=0;
+    discovered=new Set();inventory=[];logs=[];
+    updateStats();if(infoOpen)renderInfoContent();
+    closeHome();
+    addLog('New game! Place a Miner → Conveyor → Vault to start.','good');
+    startSim();
+  };
+  if(hasSave()&&Object.keys(grid).length>0){
+    confirmDo('Start a new game? Unsaved progress will be lost.',doIt);
+  } else {
+    doIt();
+  }
+}
+// =================== HAMBURGER ===================
+function openHamburger(){
+  updateSaveInfo();
+  document.getElementById('hamburgerMod').classList.add('open');
+}
+function closeHamburger(){document.getElementById('hamburgerMod').classList.remove('open');}
+function hambContinue(){closeHamburger();}
+function hambHome(){closeHamburger();openHome();}
+document.getElementById('hamburgerMod').addEventListener('click',e=>{
+  if(e.target===document.getElementById('hamburgerMod'))closeHamburger();
+});
+// =================== CHANGELOG ===================
+function openChangelog(){document.getElementById('changelogMod').classList.add('open');}
+function closeChangelog(){document.getElementById('changelogMod').classList.remove('open');}
+document.getElementById('changelogMod').addEventListener('click',e=>{
+  if(e.target===document.getElementById('changelogMod'))closeChangelog();
+});
+
+updateStats();resize();selTool('pointer');switchBot(0);
+// Show home screen on launch
+openHome();
+// Main rAF loop — always running, sim ticks when running=true
+(function loop(ts){
+  if(running){
+    if(needsTimeSync){lastSimTime=ts;needsTimeSync=false;}
+    const elapsed=ts-lastSimTime;
+    animT=Math.min(1,elapsed/SIM_MS);
+    if(elapsed>=SIM_MS){stepSim();lastSimTime=ts;animT=0;}
+  } else {
+    animT=1;
+  }
+  draw(ts);
+  requestAnimationFrame(loop);
+})(0);
+</script>
+</body>
+</html>
